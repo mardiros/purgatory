@@ -7,6 +7,6 @@ except pkg_resources.DistributionNotFound:
     pass
 
 
-from .circuitbreaker import CircuitBreaker
+from .circuitbreaker import CircuitBreakerFactory
 
-__all__ = ["CircuitBreaker"]
+__all__ = ["CircuitBreakerFactory"]
