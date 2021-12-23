@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "aiobreak"
+version = "0.1.0"
+description = "A circuit breaker implementation for asyncio"
+authors = ["Guillaume Gauvrit <guillaume@gauvr.it>"]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+
+[tool.poetry.dev-dependencies]
+black = "^21.9b0"
+coverage = {version = "^6.2", extras = ["toml"]}
+isort = "^5.9.3"
+pytest = "^6.2.5"
+pytest-asyncio = "^0.16.0"
+pytest-cov = "^3.0.0"
+flake8 = "^4.0.1"
+
+[tool.isort]
+profile = "black"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
