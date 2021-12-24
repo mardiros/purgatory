@@ -5,24 +5,30 @@ from aiobreak.circuitbreaker import CircuitBreaker, CircuitBreakerFactory
 from aiobreak.domain.model import OpenedState, HalfOpenedState, ClosedState
 
 
-def test_circuitbreaker_factory_decorator():
+@pytest.mark.asyncio
+async def test_circuitbreaker_factory_decorator():
 
     count = 0
     circuitbreaker = CircuitBreakerFactory()
 
     @circuitbreaker(circuit="client")
-    def fail_or_success(fail=False):
+    async def fail_or_success(fail=False):
         if fail:
             raise RuntimeError("Boom")
         nonlocal count
         count += 1
 
-    fail_or_success()
+    await fail_or_success()
     assert count == 1
+
+    with pytest.raises(RuntimeError):
+        await fail_or_success(fail=True)
+
     assert set(circuitbreaker.breakers.keys()) == {"client"}
     assert circuitbreaker.breakers["client"] == CircuitBreaker(
         name="client", threshold=5, ttl=300
     )
+    # assert circuitbreaker.breakers["client"]._state._state.failure_count == 1
 
     @circuitbreaker(circuit="client2", threshold=15)
     def _success2():
@@ -40,6 +46,14 @@ def test_circuitbreaker_factory_decorator():
     assert set(circuitbreaker.breakers.keys()) == {"client", "client2", "client3"}
     assert circuitbreaker.breakers["client3"] == CircuitBreaker(
         name="client3", threshold=5, ttl=60
+    )
+
+
+def test_circuitbreaker_state():
+    circuitbreaker = CircuitBreaker("plop", 5, 30)
+    assert (
+        repr(circuitbreaker)
+        == '<CircuitBreaker name="plop" state="ClosedState" threshold="5" ttl="30">'
     )
 
 
@@ -75,9 +89,9 @@ async def test_circuitbreaker_open_raise():
 
 @pytest.mark.asyncio
 async def test_circuitbreaker_open_closed_after_ttl_passed():
-    circuitbreaker = CircuitBreaker("my", threshold=5, ttl=.1)
+    circuitbreaker = CircuitBreaker("my", threshold=5, ttl=0.1)
     circuitbreaker._state.set_state(OpenedState())
-    await asyncio.sleep(.1)
+    await asyncio.sleep(0.1)
 
     count = 0
     async with circuitbreaker:
@@ -88,18 +102,16 @@ async def test_circuitbreaker_open_closed_after_ttl_passed():
 
 @pytest.mark.asyncio
 async def test_circuitbreaker_open_reopened_after_ttl_passed():
-    circuitbreaker = CircuitBreaker("my", threshold=5, ttl=.1)
+    circuitbreaker = CircuitBreaker("my", threshold=5, ttl=0.1)
     circuitbreaker._state.set_state(OpenedState())
-    await asyncio.sleep(.1)
+    await asyncio.sleep(0.1)
 
-    count = 0
     try:
         async with circuitbreaker:
             raise RuntimeError("Boom")
     except RuntimeError:
         pass
     assert circuitbreaker._state._state == OpenedState()
-
 
 
 @pytest.mark.asyncio

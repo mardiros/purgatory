@@ -13,6 +13,10 @@ class Context:
         self.threshold = threshold
         self._state = ClosedState()
 
+    @property
+    def name(self):
+        return self._state.__class__.__name__
+
     def set_state(self, state: "State"):
         self._state = state
 
@@ -34,17 +38,18 @@ class Context:
 
 
 class State(abc.ABC):
+
     @abc.abstractmethod
     async def handle_new_request(self, context: Context):
-        pass
+        """Handle new code block"""
 
     @abc.abstractmethod
     async def handle_exception(self, context: Context, exc: BaseException):
-        pass
+        """Handle exception during the code block"""
 
     @abc.abstractmethod
     async def handle_end_request(self, context: Context):
-        pass
+        """Handle proper execution after the code block"""
 
     def __eq__(self, other: object) -> bool:
         return self.__class__ == other.__class__
@@ -57,7 +62,7 @@ class ClosedState(State):
         self.failure_count = 0
 
     async def handle_new_request(self, context: Context):
-        pass
+        """When the circuit is closed, the new request has no incidence"""
 
     async def handle_exception(self, context: Context, exc: BaseException):
         self.failure_count += 1
@@ -85,17 +90,25 @@ class OpenedState(State, Exception):
         raise self
 
     async def handle_exception(self, exc: BaseException):
-        pass
+        """
+        When the circuit is opened, the OpenState is raised before entering.
+
+        this function is never called.
+        """
 
     async def handle_end_request(self):
-        pass
+        """
+        When the circuit is opened, the OpenState is raised before entering.
+
+        this function is never called.
+        """
 
 
 class HalfOpenedState(State):
     """In half open state, decide to reopen or to close."""
 
     async def handle_new_request(self, context: Context):
-        pass
+        """In half open state, we check the result of the code block execution."""
 
     async def handle_exception(self, context: Context, exc: BaseException):
         opened = OpenedState()

@@ -30,7 +30,7 @@ class CircuitBreaker:
             return await self._state.handle_end_request()
 
     def __repr__(self) -> str:
-        return f'<CircuitBreaker name="{self.name}" threshold="{self._state.threshold}" ttl="{self._state.ttl}">'
+        return f'<CircuitBreaker name="{self.name}" state="{self._state.name}" threshold="{self._state.threshold}" ttl="{self._state.ttl}">'
 
     def __eq__(self, other: object) -> bool:
         return (
@@ -59,8 +59,7 @@ class CircuitBreakerFactory:
 
         circuit_breaker = self.get_breaker(circuit, threshold, ttl)
 
-        @wraps
-        def decorator(self, func: Callable) -> Callable:
+        def decorator(func: Callable) -> Callable:
             @wraps(func)
             async def inner_coro(*args: Any, **kwds: Any) -> Any:
                 async with circuit_breaker:
