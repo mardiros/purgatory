@@ -2,10 +2,9 @@ from functools import wraps
 from typing import Any, Callable, Optional
 
 from purgatory.domain.messages.commands import CreateCircuitBreaker
-from purgatory.service.messagebus import MessageBus
 from purgatory.service.handlers import register_circuit_breaker
+from purgatory.service.messagebus import MessageBus
 from purgatory.service.unit_of_work import AbstractUnitOfWork, InMemoryUnitOfWork
-
 
 
 class CircuitBreakerFactory:

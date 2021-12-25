@@ -50,7 +50,12 @@ class CircuitBreaker:
             return await self.handle_end_request()
 
     def __repr__(self) -> str:
-        return f'<CircuitBreaker name="{self.name}" state="{self.state}" threshold="{self.threshold}" ttl="{self.ttl}">'
+        return (
+            f"<CircuitBreaker "
+            f'name="{self.name}" '
+            f'state="{self.state}" '
+            f'threshold="{self.threshold}" ttl="{self.ttl}">'
+        )
 
     def __eq__(self, other: object) -> bool:
         return (

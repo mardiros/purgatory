@@ -1,5 +1,5 @@
 import abc
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 from ..domain.messages.base import Message
 from ..typing import CircuitBreakerName

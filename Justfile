@@ -1,6 +1,6 @@
 default_test_suite := 'tests/unittests'
 
-test: unittest
+test: unittest lint
 
 lf:
     poetry run pytest -sxvvv --lf

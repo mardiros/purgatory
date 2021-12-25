@@ -5,14 +5,12 @@ import pytest
 
 from purgatory.domain.model import CircuitBreaker, ClosedState, OpenedState
 from purgatory.domain.repository import InMemoryRepository
-from purgatory.service.circuitbreaker import CircuitBreakerFactory
 
 
 @pytest.mark.asyncio
-async def test_circuitbreaker_factory_decorator():
+async def test_circuitbreaker_factory_decorator(circuitbreaker):
 
     count = 0
-    circuitbreaker = CircuitBreakerFactory()
 
     @circuitbreaker(circuit="client")
     async def fail_or_success(fail=False):
@@ -57,10 +55,9 @@ def test_circuitbreaker_state():
 
 
 @pytest.mark.asyncio
-async def test_circuitbreaker_factory_context():
+async def test_circuitbreaker_factory_context(circuitbreaker):
 
     count = 0
-    circuitbreaker = CircuitBreakerFactory()
 
     async with await circuitbreaker.get_breaker("my"):
         count += 1
@@ -123,7 +120,7 @@ async def test_circuitbreaker_closed_state_opening():
     except RuntimeError:
         pass
     assert circuitbreaker._state == ClosedState()
-    assert circuitbreaker._state.failure_count == 1
+    assert cast(ClosedState, circuitbreaker._state).failure_count == 1
 
     try:
         async with circuitbreaker:
