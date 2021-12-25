@@ -1,6 +1,8 @@
+import pytest
 from purgatory import CircuitBreakerFactory
 from purgatory.domain.repository import InMemoryRepository
+from purgatory.service.messagebus import MessageBus
 
-
-def circuitbreaker_factory():
-    yield CircuitBreakerFactory()
+@pytest.fixture()
+def messagebus():
+    yield MessageBus()

@@ -3,8 +3,7 @@ from dataclasses import dataclass
 import pytest
 
 from purgatory.domain.messages import Command, Event
-from purgatory.service import messagebus
-from purgatory.service.unit_of_work import AbstractUnitOfWork, InMemoryUnitOfWork
+from purgatory.service.unit_of_work import InMemoryUnitOfWork
 
 
 class DummyModel:
@@ -45,7 +44,7 @@ async def listen_event(cmd: DummyEvent, uow):
 
 
 @pytest.mark.asyncio
-async def test_messagebus():
+async def test_messagebus(messagebus):
     """
     Test that the message bus is firing command and event.
 

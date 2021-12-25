@@ -3,10 +3,9 @@ from typing import cast
 
 import pytest
 
-from purgatory.domain.model import ClosedState, OpenedState
+from purgatory.domain.model import CircuitBreaker, ClosedState, OpenedState
 from purgatory.domain.repository import InMemoryRepository
-from purgatory.service.circuitbreaker import CircuitBreaker, CircuitBreakerFactory
-from purgatory.service.unit_of_work import InMemoryUnitOfWork
+from purgatory.service.circuitbreaker import CircuitBreakerFactory
 
 
 @pytest.mark.asyncio
