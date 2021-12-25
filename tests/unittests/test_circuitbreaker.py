@@ -1,10 +1,11 @@
 import asyncio
 from typing import cast
-import pytest
-from purgatory.domain.repository import InMemoryRepository
 
+import pytest
+
+from purgatory.domain.model import ClosedState, OpenedState
+from purgatory.domain.repository import InMemoryRepository
 from purgatory.service.circuitbreaker import CircuitBreaker, CircuitBreakerFactory
-from purgatory.domain.model import OpenedState, ClosedState
 from purgatory.service.unit_of_work import InMemoryUnitOfWork
 
 
@@ -34,6 +35,7 @@ async def test_circuitbreaker_factory_decorator():
     @circuitbreaker(circuit="client2", threshold=15)
     async def _success2():
         pass
+
     await _success2()
     brk = await circuitbreaker.uow.circuit_breakers.get("client2")
     assert brk == CircuitBreaker(name="client2", threshold=15, ttl=300)

@@ -5,9 +5,9 @@ The state model is implemented using the State pattern from the Gang Of Four.
 """
 import abc
 import time
-import abc
 from types import TracebackType
 from typing import Optional, Type
+
 from ..typing import CircuitBreakerName, StateName
 
 

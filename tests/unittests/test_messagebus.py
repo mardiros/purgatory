@@ -1,9 +1,9 @@
-import pytest
 from dataclasses import dataclass
+
+import pytest
 
 from purgatory.domain.messages import Command, Event
 from purgatory.service import messagebus
-
 from purgatory.service.unit_of_work import AbstractUnitOfWork, InMemoryUnitOfWork
 
 
@@ -56,9 +56,9 @@ async def test_messagebus():
     DummyModel.counter = 0
     uow = FakeUnitOfWorkWithDummyEvents()
     await listen_command(DummyCommand(id=""), uow)
-    assert DummyModel.counter == 0, (
-        "Events raised cannot be played before the attach_listener has been called"
-    )
+    assert (
+        DummyModel.counter == 0
+    ), "Events raised cannot be played before the attach_listener has been called"
 
     await listen_event(DummyEvent(id="", increment=1), uow)
     assert DummyModel.counter == 1

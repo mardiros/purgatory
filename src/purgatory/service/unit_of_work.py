@@ -1,12 +1,10 @@
 """Unit of work"""
 from __future__ import annotations
+
 import abc
 from typing import Any
 
-from ..domain.repository import (
-    AbstractRepository,
-    InMemoryRepository
-)
+from ..domain.repository import AbstractRepository, InMemoryRepository
 
 
 class AbstractUnitOfWork(abc.ABC):

@@ -1,3 +1,2 @@
-
 CircuitBreakerName = str
 StateName = str

@@ -14,8 +14,7 @@ import logging
 from collections import defaultdict
 from typing import Any, Callable
 
-from ..domain.messages.base import Message, Command, Event
-
+from ..domain.messages.base import Command, Event, Message
 from . import unit_of_work
 
 log = logging.getLogger(__name__)
@@ -27,6 +26,7 @@ class ConfigurationError(RuntimeError):
 
 class MessageRegistry(object):
     """Store all the handlers for commands an events."""
+
     def __init__(self):
         self.commands_registry = {}
         self.events_registry = defaultdict(list)

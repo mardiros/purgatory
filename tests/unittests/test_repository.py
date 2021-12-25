@@ -1,7 +1,7 @@
 import pytest
 
-from purgatory.domain.repository import InMemoryRepository
 from purgatory.domain.model import CircuitBreaker
+from purgatory.domain.repository import InMemoryRepository
 
 
 @pytest.mark.asyncio
