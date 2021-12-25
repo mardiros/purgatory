@@ -15,51 +15,27 @@ class AbstractUnitOfWork(abc.ABC):
         while self.circuit_breakers.messages:
             yield self.circuit_breakers.messages.pop(0)
 
-    def __enter__(self) -> AbstractUnitOfWork:
+    async def __aenter__(self) -> AbstractUnitOfWork:
         return self
 
-    def __exit__(self, *args):
-        self.rollback()
+    async def __aexit__(self, *args):
+        await self.rollback()
 
     @abc.abstractmethod
-    def commit(self):
+    async def commit(self):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def rollback(self):
+    async def rollback(self):
         raise NotImplementedError
-
-
-class _InMemoryUnitOfWork(AbstractUnitOfWork):
-    def __init__(self):
-        self.circuit_breakers = InMemoryRepository()
-
-    def commit(self):
-        pass
-
-    def rollback(self):
-        pass
 
 
 class InMemoryUnitOfWork(AbstractUnitOfWork):
-    instance = None
-
     def __init__(self):
-        if self.instance is None:
-            InMemoryUnitOfWork.instance = _InMemoryUnitOfWork()
+        self.circuit_breakers = InMemoryRepository()
 
-    @property
-    def circuit_breakers(self):
-        return self.instance.circuit_breakers
+    async def commit(self):
+        pass
 
-    def __enter__(self) -> AbstractUnitOfWork:
-        return self.instance.__enter__()
-
-    def __exit__(self, *args):
-        return self.instance.__exit__()
-
-    def commit(self):
-        return self.instance.commit()
-
-    def rollback(self):
-        return self.instance.rollback()
+    async def rollback(self):
+        pass

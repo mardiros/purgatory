@@ -1,5 +1,5 @@
 import abc
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 
 from .model import CircuitBreaker
@@ -10,11 +10,11 @@ from ..typing import CircuitBreakerName
 class AbstractRepository(abc.ABC):
 
     messages: List[Message]
-    breakers = Dict[CircuitBreakerName, CircuitBreaker]
-
+ 
     @abc.abstractmethod
-    async def load(self):
+    async def get(self, name: CircuitBreakerName) -> Optional[CircuitBreaker]:
         """Load breakers from the repository."""
+
 
     @abc.abstractmethod
     async def register(self, model: CircuitBreaker):
@@ -25,9 +25,11 @@ class InMemoryRepository(AbstractRepository):
 
     def __init__(self):
         self.breakers = {}
+        self.messages = []
 
-    async def load(self):
-        pass
+    async def get(self, name: CircuitBreakerName) -> Optional[CircuitBreaker]:
+        """Add a circuit breaker into the repository."""
+        return self.breakers.get(name)
 
     async def register(self, model: CircuitBreaker):
         """Add a circuit breaker into the repository."""

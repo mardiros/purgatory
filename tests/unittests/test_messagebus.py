@@ -1,9 +1,10 @@
+import pytest
 from dataclasses import dataclass
 
 from aiobreak.domain.messages import Command, Event
 from aiobreak.service import messagebus
 
-from aiobreak.service.unit_of_work import _InMemoryUnitOfWork
+from aiobreak.service.unit_of_work import AbstractUnitOfWork, InMemoryUnitOfWork
 
 
 class DummyModel:
@@ -23,7 +24,7 @@ class DummyEvent(Event):
     increment: int
 
 
-class FakeUnitOfWorkWithDummyEvents(_InMemoryUnitOfWork):
+class FakeUnitOfWorkWithDummyEvents(InMemoryUnitOfWork):
     def __init__(self):
         super().__init__()
         self.events = []
@@ -33,17 +34,18 @@ class FakeUnitOfWorkWithDummyEvents(_InMemoryUnitOfWork):
             yield self.events.pop(0)
 
 
-def listen_command(cmd: DummyCommand, uow):
+async def listen_command(cmd: DummyCommand, uow: FakeUnitOfWorkWithDummyEvents):
     """This command raise an event played by the message bus."""
     uow.events.append(DummyEvent(id="", increment=10))
 
 
-def listen_event(cmd: DummyEvent, uow):
+async def listen_event(cmd: DummyEvent, uow):
     """This event is indented to be fire by the message bus."""
     DummyModel.counter += cmd.increment
 
 
-def test_messagebus():
+@pytest.mark.asyncio
+async def test_messagebus():
     """
     Test that the message bus is firing command and event.
 
@@ -52,35 +54,34 @@ def test_messagebus():
     """
 
     DummyModel.counter = 0
-    with FakeUnitOfWorkWithDummyEvents() as uow:
-        listen_command(DummyCommand(id=""), uow)
-        assert DummyModel.counter == 0, (
-            "Events raised cannot be played before the "
-            "attach_listener has been called"
-        )
+    uow = FakeUnitOfWorkWithDummyEvents()
+    await listen_command(DummyCommand(id=""), uow)
+    assert DummyModel.counter == 0, (
+        "Events raised cannot be played before the attach_listener has been called"
+    )
 
-        listen_event(DummyEvent(id="", increment=1), uow)
-        assert DummyModel.counter == 1
+    await listen_event(DummyEvent(id="", increment=1), uow)
+    assert DummyModel.counter == 1
 
-        messagebus.handle(DummyCommand(id=""), uow)
-        assert (
-            DummyModel.counter == 1
-        ), "The command cannot raise event before attach_listener"
+    await messagebus.handle(DummyCommand(id=""), uow)
+    assert (
+        DummyModel.counter == 1
+    ), "The command cannot raise event before attach_listener"
 
     messagebus.add_listener(DummyCommand, listen_command)
     messagebus.add_listener(DummyEvent, listen_event)
 
-    with FakeUnitOfWorkWithDummyEvents() as uow:
-        messagebus.handle(DummyCommand(id=""), uow)
-        assert DummyModel.counter == 11, (
-            "The command should raise an event that is handle by the bus that "
-            "will increment the model to 10"
-        )
+    uow = FakeUnitOfWorkWithDummyEvents()
+    await messagebus.handle(DummyCommand(id=""), uow)
+    assert DummyModel.counter == 11, (
+        "The command should raise an event that is handle by the bus that "
+        "will increment the model to 10"
+    )
 
     messagebus.remove_listener(DummyEvent, listen_event)
 
-    with FakeUnitOfWorkWithDummyEvents() as uow:
-        messagebus.handle(DummyCommand(id=""), uow)
-        assert (
-            DummyModel.counter == 11
-        ), "The command should raise an event that is not handled anymore "
+    uow = FakeUnitOfWorkWithDummyEvents()
+    await messagebus.handle(DummyCommand(id=""), uow)
+    assert (
+        DummyModel.counter == 11
+    ), "The command should raise an event that is not handled anymore "

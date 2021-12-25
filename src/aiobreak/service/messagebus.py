@@ -60,7 +60,7 @@ class MessageRegistry(object):
                 "type %s should be a command or an event"
             )
 
-    def handle(self, message, uow: unit_of_work.AbstractUnitOfWork):
+    async def handle(self, message, uow: unit_of_work.AbstractUnitOfWork):
         """
         Notify listener of that event registered with `messagebus.add_listener`.
         """
@@ -71,11 +71,11 @@ class MessageRegistry(object):
                 raise RuntimeError(f"{message} was not an Event or Command")
             msg_type = type(message)
             if msg_type in self.commands_registry:
-                self.commands_registry[msg_type](message, uow)
+                await self.commands_registry[msg_type](message, uow)
                 queue.extend(uow.collect_new_events())
             elif msg_type in self.events_registry:
                 for callback in self.events_registry[msg_type]:
-                    callback(message, uow)
+                    await callback(message, uow)
                     queue.extend(uow.collect_new_events())
 
 
@@ -90,8 +90,8 @@ def remove_listener(msg_type: type, callback: Callable):
     _registry.remove_listener(msg_type, callback)
 
 
-def handle(message: Message, uow: unit_of_work.AbstractUnitOfWork):
+async def handle(message: Message, uow: unit_of_work.AbstractUnitOfWork):
     """Handle a new message."""
-    with uow:
-        _registry.handle(message, uow)
-        uow.commit()
+    async with uow:
+        await _registry.handle(message, uow)
+        await uow.commit()

@@ -1,32 +1,47 @@
 from functools import wraps
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Optional
+from aiobreak.domain.messages.commands import CreateCircuitBreaker
 
 from aiobreak.domain.model import CircuitBreaker
+from aiobreak.domain.messages.commands import CreateCircuitBreaker
+from aiobreak.service import messagebus
+from aiobreak.service.unit_of_work import AbstractUnitOfWork, InMemoryUnitOfWork
+from aiobreak.service.handlers import register_circuit_breaker
+
+messagebus.add_listener(CreateCircuitBreaker, register_circuit_breaker)
 
 
 class CircuitBreakerFactory:
-    def __init__(self, default_threshold: int = 5, default_ttl: int = 300):
+    def __init__(
+        self,
+        default_threshold: int = 5,
+        default_ttl: int = 300,
+        uow: Optional[AbstractUnitOfWork] = None,
+    ):
         self.default_threshold = default_threshold
         self.default_ttl = default_ttl
-        self.breakers: Dict[str, CircuitBreaker] = {}
+        self.uow = uow or InMemoryUnitOfWork()
 
-    def get_breaker(
-        self, circuit: str, threshold: Optional[int] = None, ttl: Optional[int] = None
-    ) -> CircuitBreaker:
-        if circuit not in self.breakers:
-            self.breakers[circuit] = CircuitBreaker(
-                circuit, threshold or self.default_threshold, ttl or self.default_ttl
-            )
-        return self.breakers[circuit]
+    async def get_breaker(self, circuit: str, threshold=None, ttl=None):
+        async with self.uow as uow:
+            brk = await uow.circuit_breakers.get(circuit)
+        if brk is None:
+            async with self.uow as uow:
+                bkr_threshold = threshold or self.default_threshold
+                bkr_ttl = ttl or self.default_ttl
+                await messagebus.handle(
+                    CreateCircuitBreaker(circuit, bkr_threshold, bkr_ttl),
+                    self.uow,
+                )
+                brk = CircuitBreaker(circuit, bkr_threshold, bkr_ttl)
+        return brk
 
     def __call__(self, circuit: str, threshold=None, ttl=None) -> Any:
-
-        circuit_breaker = self.get_breaker(circuit, threshold, ttl)
-
         def decorator(func: Callable) -> Callable:
             @wraps(func)
             async def inner_coro(*args: Any, **kwds: Any) -> Any:
-                async with circuit_breaker:
+                brk = await self.get_breaker(circuit, threshold, ttl)
+                async with brk:
                     return await func(*args, **kwds)
 
             return inner_coro
