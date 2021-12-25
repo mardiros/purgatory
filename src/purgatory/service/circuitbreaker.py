@@ -29,11 +29,10 @@ class CircuitBreakerFactory:
             async with self.uow as uow:
                 bkr_threshold = threshold or self.default_threshold
                 bkr_ttl = ttl or self.default_ttl
-                await messagebus.handle(
+                brk = await messagebus.handle(
                     CreateCircuitBreaker(circuit, bkr_threshold, bkr_ttl),
                     self.uow,
                 )
-                brk = CircuitBreaker(circuit, bkr_threshold, bkr_ttl)
         return brk
 
     def __call__(self, circuit: str, threshold=None, ttl=None) -> Any:

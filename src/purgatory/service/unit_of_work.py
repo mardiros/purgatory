@@ -1,6 +1,7 @@
 """Unit of work"""
 from __future__ import annotations
 import abc
+from typing import Any
 
 from ..domain.repository import (
     AbstractRepository,
@@ -18,8 +19,8 @@ class AbstractUnitOfWork(abc.ABC):
     async def __aenter__(self) -> AbstractUnitOfWork:
         return self
 
-    async def __aexit__(self, *args):
-        await self.rollback()
+    async def __aexit__(self, *args: Any):
+        pass
 
     @abc.abstractmethod
     async def commit(self):
