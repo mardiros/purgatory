@@ -1,12 +1,12 @@
 from functools import wraps
 from typing import Any, Callable, Optional
-from aiobreak.domain.messages.commands import CreateCircuitBreaker
+from purgatory.domain.messages.commands import CreateCircuitBreaker
 
-from aiobreak.domain.model import CircuitBreaker
-from aiobreak.domain.messages.commands import CreateCircuitBreaker
-from aiobreak.service import messagebus
-from aiobreak.service.unit_of_work import AbstractUnitOfWork, InMemoryUnitOfWork
-from aiobreak.service.handlers import register_circuit_breaker
+from purgatory.domain.model import CircuitBreaker
+from purgatory.domain.messages.commands import CreateCircuitBreaker
+from purgatory.service import messagebus
+from purgatory.service.unit_of_work import AbstractUnitOfWork, InMemoryUnitOfWork
+from purgatory.service.handlers import register_circuit_breaker
 
 messagebus.add_listener(CreateCircuitBreaker, register_circuit_breaker)
 

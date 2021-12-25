@@ -1,11 +1,11 @@
 import asyncio
 from typing import cast
 import pytest
-from aiobreak.domain.repository import InMemoryRepository
+from purgatory.domain.repository import InMemoryRepository
 
-from aiobreak.service.circuitbreaker import CircuitBreaker, CircuitBreakerFactory
-from aiobreak.domain.model import OpenedState, ClosedState
-from aiobreak.service.unit_of_work import InMemoryUnitOfWork
+from purgatory.service.circuitbreaker import CircuitBreaker, CircuitBreakerFactory
+from purgatory.domain.model import OpenedState, ClosedState
+from purgatory.service.unit_of_work import InMemoryUnitOfWork
 
 
 @pytest.mark.asyncio

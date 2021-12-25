@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "aiobreak"
+name = "purgatory"
 version = "0.1.0"
 description = "A circuit breaker implementation for asyncio"
 authors = ["Guillaume Gauvrit <guillaume@gauvr.it>"]

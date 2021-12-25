@@ -1,10 +1,10 @@
 import pytest
 from dataclasses import dataclass
 
-from aiobreak.domain.messages import Command, Event
-from aiobreak.service import messagebus
+from purgatory.domain.messages import Command, Event
+from purgatory.service import messagebus
 
-from aiobreak.service.unit_of_work import AbstractUnitOfWork, InMemoryUnitOfWork
+from purgatory.service.unit_of_work import AbstractUnitOfWork, InMemoryUnitOfWork
 
 
 class DummyModel:

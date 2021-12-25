@@ -18,5 +18,5 @@ black:
 cov test_suite=default_test_suite:
     rm -f .coverage
     rm -rf htmlcov
-    poetry run pytest --cov-report=html --cov=aiobreak {{test_suite}}
+    poetry run pytest --cov-report=html --cov=purgatory {{test_suite}}
     xdg-open htmlcov/index.html
