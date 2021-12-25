@@ -2,9 +2,11 @@ from functools import wraps
 from typing import Any, Callable, Optional
 
 from purgatory.domain.messages.commands import CreateCircuitBreaker
+from purgatory.service import messagebus
 from purgatory.service.handlers import register_circuit_breaker
-from purgatory.service.messagebus import MessageBus
 from purgatory.service.unit_of_work import AbstractUnitOfWork, InMemoryUnitOfWork
+
+messagebus.add_listener(CreateCircuitBreaker, register_circuit_breaker)
 
 
 class CircuitBreakerFactory:
@@ -17,8 +19,6 @@ class CircuitBreakerFactory:
         self.default_threshold = default_threshold
         self.default_ttl = default_ttl
         self.uow = uow or InMemoryUnitOfWork()
-        self.messagebus = MessageBus()
-        self.messagebus.add_listener(CreateCircuitBreaker, register_circuit_breaker)
 
     async def get_breaker(self, circuit: str, threshold=None, ttl=None):
         async with self.uow as uow:
@@ -27,11 +27,10 @@ class CircuitBreakerFactory:
             async with self.uow as uow:
                 bkr_threshold = threshold or self.default_threshold
                 bkr_ttl = ttl or self.default_ttl
-                brk = await self.messagebus.handle(
+                brk = await messagebus.handle(
                     CreateCircuitBreaker(circuit, bkr_threshold, bkr_ttl),
                     self.uow,
                 )
-        brk.messagebus = self.messagebus
         return brk
 
     def __call__(self, circuit: str, threshold=None, ttl=None) -> Any:

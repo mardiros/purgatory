@@ -14,7 +14,8 @@ import logging
 from collections import defaultdict
 from typing import Any, Callable
 
-from purgatory.domain.messages.base import Command, Event
+from purgatory.domain.messages.base import Command, Event, Message
+
 from . import unit_of_work
 
 log = logging.getLogger(__name__)
@@ -24,7 +25,7 @@ class ConfigurationError(RuntimeError):
     """Prevents bad usage of the add_listener."""
 
 
-class MessageBus(object):
+class MessageRegistry(object):
     """Store all the handlers for commands an events."""
 
     def __init__(self):
@@ -82,3 +83,22 @@ class MessageBus(object):
                     await callback(message, uow)
                     queue.extend(uow.collect_new_events())
         return ret
+
+
+_registry = MessageRegistry()
+
+
+def add_listener(msg_type: type, callback: Callable):
+    _registry.add_listener(msg_type, callback)
+
+
+def remove_listener(msg_type: type, callback: Callable):
+    _registry.remove_listener(msg_type, callback)
+
+
+async def handle(message: Message, uow: unit_of_work.AbstractUnitOfWork) -> Any:
+    """Handle a new message."""
+    async with uow:
+        ret = await _registry.handle(message, uow)
+        await uow.commit()
+    return ret

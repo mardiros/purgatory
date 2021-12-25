@@ -1,7 +1,7 @@
 import pytest
 
 from purgatory import CircuitBreakerFactory
-from purgatory.service.messagebus import MessageBus
+from purgatory.service.messagebus import MessageRegistry
 
 
 @pytest.fixture()
@@ -11,4 +11,4 @@ def circuitbreaker():
 
 @pytest.fixture()
 def messagebus():
-    yield MessageBus()
+    yield MessageRegistry()

@@ -2,8 +2,8 @@ import abc
 from typing import List, Optional
 
 from purgatory.domain.messages.base import Message
-from purgatory.typing import CircuitBreakerName
 from purgatory.domain.model import CircuitBreaker
+from purgatory.typing import CircuitBreakerName
 
 
 class AbstractRepository(abc.ABC):
