@@ -31,6 +31,7 @@ class CircuitBreakerFactory:
                     CreateCircuitBreaker(circuit, bkr_threshold, bkr_ttl),
                     self.uow,
                 )
+        brk.messagebus = self.messagebus
         return brk
 
     def __call__(self, circuit: str, threshold=None, ttl=None) -> Any:

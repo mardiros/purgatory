@@ -5,10 +5,11 @@ The state model is implemented using the State pattern from the Gang Of Four.
 """
 import abc
 import time
+from dataclasses import dataclass
 from types import TracebackType
 from typing import Optional, Type
 
-from ..typing import CircuitBreakerName, StateName
+from purgatory.typing import CircuitBreakerName, StateName
 
 
 class CircuitBreaker:
@@ -66,6 +67,7 @@ class CircuitBreaker:
         )
 
 
+@dataclass
 class State(abc.ABC):
     @abc.abstractmethod
     async def handle_new_request(self, context: CircuitBreaker):
@@ -86,6 +88,8 @@ class State(abc.ABC):
 class ClosedState(State):
     """In closed state, track for failure."""
 
+    failure_count: int
+
     def __init__(self) -> None:
         self.failure_count = 0
 
@@ -105,6 +109,8 @@ class ClosedState(State):
 
 class OpenedState(State, Exception):
     """In open state, reopen after a TTL."""
+
+    opened_at: float
 
     def __init__(self) -> None:
         Exception.__init__(self, "Circuit breaker is open")

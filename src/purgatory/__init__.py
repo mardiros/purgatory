@@ -7,6 +7,6 @@ except pkg_resources.DistributionNotFound:
     pass
 
 
-from .service.circuitbreaker import CircuitBreakerFactory
+from purgatory.service.circuitbreaker import CircuitBreakerFactory
 
 __all__ = ["CircuitBreakerFactory"]

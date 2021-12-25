@@ -4,7 +4,7 @@ from __future__ import annotations
 import abc
 from typing import Any
 
-from ..domain.repository import AbstractRepository, InMemoryRepository
+from purgatory.domain.repository import AbstractRepository, InMemoryRepository
 
 
 class AbstractUnitOfWork(abc.ABC):

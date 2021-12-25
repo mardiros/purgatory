@@ -14,7 +14,7 @@ import logging
 from collections import defaultdict
 from typing import Any, Callable
 
-from ..domain.messages.base import Command, Event
+from purgatory.domain.messages.base import Command, Event
 from . import unit_of_work
 
 log = logging.getLogger(__name__)
