@@ -74,7 +74,7 @@ async def test_circuitbreaker_factory_context(circuitbreaker):
 @pytest.mark.asyncio
 async def test_circuitbreaker_open_raise():
     circuitbreaker = CircuitBreaker("my", threshold=2, ttl=42)
-    circuitbreaker.set_state(OpenedState())
+    await circuitbreaker.set_state(OpenedState())
 
     count = 0
     with pytest.raises(OpenedState):
@@ -86,7 +86,7 @@ async def test_circuitbreaker_open_raise():
 @pytest.mark.asyncio
 async def test_circuitbreaker_open_closed_after_ttl_passed():
     circuitbreaker = CircuitBreaker("my", threshold=5, ttl=0.1)
-    circuitbreaker.set_state(OpenedState())
+    await circuitbreaker.set_state(OpenedState())
     await asyncio.sleep(0.1)
 
     count = 0
@@ -99,7 +99,7 @@ async def test_circuitbreaker_open_closed_after_ttl_passed():
 @pytest.mark.asyncio
 async def test_circuitbreaker_open_reopened_after_ttl_passed():
     circuitbreaker = CircuitBreaker("my", threshold=5, ttl=0.1)
-    circuitbreaker.set_state(OpenedState())
+    await circuitbreaker.set_state(OpenedState())
     await asyncio.sleep(0.1)
 
     try:
@@ -113,7 +113,7 @@ async def test_circuitbreaker_open_reopened_after_ttl_passed():
 @pytest.mark.asyncio
 async def test_circuitbreaker_closed_state_opening():
     circuitbreaker = CircuitBreaker("my", threshold=2, ttl=1)
-    circuitbreaker.set_state(ClosedState())
+    await circuitbreaker.set_state(ClosedState())
     try:
         async with circuitbreaker:
             raise RuntimeError("Boom")

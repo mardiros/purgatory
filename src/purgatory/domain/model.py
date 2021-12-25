@@ -23,7 +23,8 @@ class CircuitBreaker:
     def state(self) -> StateName:
         return self._state.__class__.__name__
 
-    def set_state(self, state: "State"):
+    async def set_state(self, state: "State"):
+
         self._state = state
 
     async def handle_new_request(self):
@@ -100,7 +101,7 @@ class ClosedState(State):
         self.failure_count += 1
         if self.failure_count >= context.threshold:
             opened = OpenedState()
-            context.set_state(opened)
+            await context.set_state(opened)
 
     async def handle_end_request(self, context: CircuitBreaker):
         """Reset in case the request is ok"""
@@ -119,7 +120,7 @@ class OpenedState(State, Exception):
     async def handle_new_request(self, context: CircuitBreaker):
         closed_at = self.opened_at + context.ttl
         if time.time() > closed_at:
-            context.set_state(HalfOpenedState())
+            await context.set_state(HalfOpenedState())
             return context.handle_new_request()
         raise self
 
@@ -146,7 +147,7 @@ class HalfOpenedState(State):
 
     async def handle_exception(self, context: CircuitBreaker, exc: BaseException):
         opened = OpenedState()
-        context.set_state(opened)
+        await context.set_state(opened)
 
     async def handle_end_request(self, context: CircuitBreaker):
-        context.set_state(ClosedState())
+        await context.set_state(ClosedState())
