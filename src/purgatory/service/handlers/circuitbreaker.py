@@ -8,5 +8,4 @@ async def register_circuit_breaker(
 ) -> CircuitBreaker:
     ret = CircuitBreaker(cmd.name, cmd.threshold, cmd.ttl)
     await uow.circuit_breakers.register(ret)
-
     return ret

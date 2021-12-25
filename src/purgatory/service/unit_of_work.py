@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import abc
-from typing import Any
+from types import TracebackType
+from typing import Optional, Type
 
 from purgatory.domain.repository import AbstractRepository, InMemoryRepository
 
@@ -17,16 +18,23 @@ class AbstractUnitOfWork(abc.ABC):
     async def __aenter__(self) -> AbstractUnitOfWork:
         return self
 
-    async def __aexit__(self, *args: Any):
-        pass
+    async def __aexit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc: Optional[BaseException],
+        tb: Optional[TracebackType],
+    ) -> None:
+        """Rollback in case of exception."""
+        if exc:
+            await self.rollback()
 
     @abc.abstractmethod
     async def commit(self):
-        raise NotImplementedError
+        """Commit the transation."""
 
     @abc.abstractmethod
     async def rollback(self):
-        raise NotImplementedError
+        """Rollback the transation."""
 
 
 class InMemoryUnitOfWork(AbstractUnitOfWork):
@@ -34,7 +42,7 @@ class InMemoryUnitOfWork(AbstractUnitOfWork):
         self.circuit_breakers = InMemoryRepository()
 
     async def commit(self):
-        pass
+        """Do nothing."""
 
     async def rollback(self):
-        pass
+        """Do nothing."""
