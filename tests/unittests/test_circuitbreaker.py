@@ -2,8 +2,8 @@ from dataclasses import asdict
 from typing import cast
 
 import pytest
-from purgatory.domain.messages.events import CircuitBreakerStateChanged
 
+from purgatory.domain.messages.events import CircuitBreakerStateChanged
 from purgatory.domain.model import CircuitBreaker
 from purgatory.domain.repository import InMemoryRepository
 

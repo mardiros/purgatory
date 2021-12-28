@@ -9,14 +9,14 @@ classifiers = [
   "Topic :: Internet :: WWW/HTTP",
 ]
 description = "A circuit breaker implementation for asyncio"
-license = "BSD-derived"
 homepage = "https://github.com/mardiros/purgatory"
+license = "BSD-derived"
 name = "purgatory-circuitbreaker"
-readme = "README.rst"
-version = "0.1.0"
 packages = [
   {include = "purgatory", from = "src"},
 ]
+readme = "README.rst"
+version = "0.1.0"
 
 [tool.poetry.dependencies]
 python = "^3.7"

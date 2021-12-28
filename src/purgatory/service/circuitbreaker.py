@@ -2,11 +2,9 @@ from functools import wraps
 from types import TracebackType
 from typing import Any, Callable, Optional, Type
 
-from purgatory.domain.model import CircuitBreaker
-from purgatory.domain.messages.commands import (
-    CreateCircuitBreaker,
-)
+from purgatory.domain.messages.commands import CreateCircuitBreaker
 from purgatory.domain.messages.events import CircuitBreakerStateChanged
+from purgatory.domain.model import CircuitBreaker
 from purgatory.service.handlers import register_circuit_breaker
 from purgatory.service.handlers.circuitbreaker import save_circuit_breaker_state
 from purgatory.service.messagebus import MessageRegistry
@@ -14,7 +12,9 @@ from purgatory.service.unit_of_work import AbstractUnitOfWork, InMemoryUnitOfWor
 
 
 class CircuitBreakerService:
-    def __init__(self, brk: CircuitBreaker, uow: AbstractUnitOfWork, messagebus: MessageRegistry) -> None:
+    def __init__(
+        self, brk: CircuitBreaker, uow: AbstractUnitOfWork, messagebus: MessageRegistry
+    ) -> None:
         self.brk = brk
         self.uow = uow
         self.messagebus = messagebus
@@ -79,6 +79,7 @@ class CircuitBreakerFactory:
                 brk = await self.get_breaker(circuit, threshold, ttl)
                 async with brk:
                     return await func(*args, **kwds)
+
             return inner_coro
 
         return decorator
