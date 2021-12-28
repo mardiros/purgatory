@@ -11,9 +11,12 @@ classifiers = [
 description = "A circuit breaker implementation for asyncio"
 license = "BSD-derived"
 homepage = "https://github.com/mardiros/purgatory"
-name = "purgatory"
+name = "purgatory-circuitbreaker"
 readme = "README.rst"
 version = "0.1.0"
+packages = [
+  {include = "purgatory", from = "src"},
+]
 
 [tool.poetry.dependencies]
 python = "^3.7"
