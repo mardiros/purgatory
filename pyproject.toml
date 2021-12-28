@@ -1,8 +1,19 @@
 [tool.poetry]
-name = "purgatory"
-version = "0.1.0"
-description = "A circuit breaker implementation for asyncio"
 authors = ["Guillaume Gauvrit <guillaume@gauvr.it>"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Framework :: AsyncIO",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: BSD License",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Topic :: Internet :: WWW/HTTP",
+]
+description = "A circuit breaker implementation for asyncio"
+license = "BSD-derived"
+homepage = "https://github.com/mardiros/purgatory"
+name = "purgatory"
+readme = "README.rst"
+version = "0.1.0"
 
 [tool.poetry.dependencies]
 python = "^3.7"
@@ -10,11 +21,11 @@ python = "^3.7"
 [tool.poetry.dev-dependencies]
 black = "^21.9b0"
 coverage = {version = "^6.2", extras = ["toml"]}
+flake8 = "^4.0.1"
 isort = "^5.9.3"
 pytest = "^6.2.5"
 pytest-asyncio = "^0.16.0"
 pytest-cov = "^3.0.0"
-flake8 = "^4.0.1"
 
 [tool.isort]
 profile = "black"
@@ -26,5 +37,5 @@ exclude_lines = [
 ]
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+requires = ["poetry-core>=1.0.0"]
