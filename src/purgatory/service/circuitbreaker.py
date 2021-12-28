@@ -49,7 +49,7 @@ class CircuitBreakerFactory:
             async def inner_coro(*args: Any, **kwds: Any) -> Any:
                 brk = await self.get_breaker(circuit, threshold, ttl)
                 try:
-                    async with brk:
+                    with brk:
                         return await func(*args, **kwds)
                 finally:
                     if brk._dirty:
