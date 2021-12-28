@@ -13,16 +13,23 @@ from purgatory.typing import CircuitBreakerName, StateName
 
 
 class CircuitBreaker:
-    def __init__(self, name: CircuitBreakerName, threshold: int, ttl: float) -> None:
+    def __init__(
+        self, name: CircuitBreakerName, threshold: int, ttl: float, state="closed"
+    ) -> None:
         self.name = name
         self.ttl = ttl
         self.threshold = threshold
-        self._state = ClosedState()
+
+        self._state = {
+            ClosedState.name: ClosedState,
+            OpenedState.name: OpenedState,
+            HalfOpenedState.name: HalfOpenedState,
+        }[state]()
         self._dirty = False
 
     @property
     def state(self) -> StateName:
-        return self._state.__class__.__name__
+        return self._state.name
 
     @property
     def dirty(self) -> bool:
@@ -86,6 +93,7 @@ class CircuitBreaker:
 class State(abc.ABC):
     failure_count: Optional[int] = None
     opened_at: Optional[float] = None
+    name: str = ""
 
     @abc.abstractmethod
     def handle_new_request(self, context: CircuitBreaker):
@@ -103,10 +111,12 @@ class State(abc.ABC):
         return self.__class__ == other.__class__
 
 
+@dataclass
 class ClosedState(State):
     """In closed state, track for failure."""
 
     failure_count: int
+    name: str = "closed"
 
     def __init__(self) -> None:
         self.failure_count = 0
@@ -125,9 +135,11 @@ class ClosedState(State):
         self.failure_count = 0
 
 
+@dataclass
 class OpenedState(State, Exception):
     """In open state, reopen after a TTL."""
 
+    name: str = "opened"
     opened_at: float
 
     def __init__(self) -> None:
@@ -156,8 +168,11 @@ class OpenedState(State, Exception):
         """
 
 
+@dataclass
 class HalfOpenedState(State):
     """In half open state, decide to reopen or to close."""
+
+    name: str = "half-opened"
 
     def handle_new_request(self, context: CircuitBreaker):
         """In half open state, we check the result of the code block execution."""

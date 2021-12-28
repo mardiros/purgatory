@@ -1,4 +1,5 @@
 import abc
+import json
 from typing import List, Optional
 
 from purgatory.domain.messages.base import Message

@@ -45,7 +45,9 @@ async def test_circuitbreaker_open_reopened_after_ttl_passed():
     except RuntimeError:
         pass
     assert circuitbreaker.dirty is True
-    assert circuitbreaker._state == OpenedState()
+    state = OpenedState()
+    state.opened_at = cast(OpenedState, circuitbreaker._state).opened_at
+    assert circuitbreaker._state == state
 
 
 @pytest.mark.asyncio
@@ -57,7 +59,9 @@ async def test_circuitbreaker_closed_state_opening():
     except RuntimeError:
         pass
     assert not circuitbreaker.dirty
-    assert circuitbreaker._state == ClosedState()
+    state = ClosedState()
+    state.failure_count = 1
+    assert circuitbreaker._state == state
     assert cast(ClosedState, circuitbreaker._state).failure_count == 1
 
     try:
@@ -67,4 +71,6 @@ async def test_circuitbreaker_closed_state_opening():
         pass
 
     assert circuitbreaker.dirty is True
-    assert circuitbreaker._state == OpenedState()
+    state = OpenedState()
+    state.opened_at = cast(OpenedState, circuitbreaker._state).opened_at
+    assert circuitbreaker._state == state

@@ -47,11 +47,12 @@ async def test_circuitbreaker_factory_decorator(circuitbreaker):
     assert brk == CircuitBreaker(name="client3", threshold=5, ttl=60)
 
 
-def test_circuitbreaker_state():
-    circuitbreaker = CircuitBreaker("plop", 5, 30)
+@pytest.mark.parametrize("state", ["closed", "opened", "half-opened"])
+def test_circuitbreaker_repr(state):
+    circuitbreaker = CircuitBreaker("plop", 5, 30, state)
     assert (
         repr(circuitbreaker)
-        == '<CircuitBreaker name="plop" state="ClosedState" threshold="5" ttl="30">'
+        == f'<CircuitBreaker name="plop" state="{state}" threshold="5" ttl="30">'
     )
 
 
@@ -100,7 +101,7 @@ async def test_circuitbreaker_raise_state_changed_event(circuitbreaker):
         {
             "name": "my",
             "opened_at": evts[0]["opened_at"],
-            "state": "OpenedState",
+            "state": "opened",
         },
     ]
 
