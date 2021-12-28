@@ -1,14 +1,6 @@
 """
 Propagate commands and events to every registered handles.
 
-This module must be used as a singleton.
-
-Use `messagebus.add_listener` to register a handler.
-
-Use `messagebus.remove_listener` to unregister a handler
-
-Use `messagebus.handle` to propagate an event or a command.
-
 """
 import logging
 from collections import defaultdict
@@ -61,7 +53,9 @@ class MessageRegistry(object):
                 "type %s should be a command or an event"
             )
 
-    async def handle(self, message, uow: unit_of_work.AbstractUnitOfWork) -> Any:
+    async def handle(
+        self, message: Message, uow: unit_of_work.AbstractUnitOfWork
+    ) -> Any:
         """
         Notify listener of that event registered with `messagebus.add_listener`.
         Return the first event from the command.
@@ -83,22 +77,3 @@ class MessageRegistry(object):
                     await callback(message, uow)
                     queue.extend(uow.collect_new_events())
         return ret
-
-
-_registry = MessageRegistry()
-
-
-def add_listener(msg_type: type, callback: Callable):
-    _registry.add_listener(msg_type, callback)
-
-
-def remove_listener(msg_type: type, callback: Callable):
-    _registry.remove_listener(msg_type, callback)
-
-
-async def handle(message: Message, uow: unit_of_work.AbstractUnitOfWork) -> Any:
-    """Handle a new message."""
-    async with uow:
-        ret = await _registry.handle(message, uow)
-        await uow.commit()
-    return ret

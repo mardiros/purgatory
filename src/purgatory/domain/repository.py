@@ -18,6 +18,16 @@ class AbstractRepository(abc.ABC):
     async def register(self, model: CircuitBreaker):
         """Add a circuit breaker into the repository."""
 
+    @abc.abstractmethod
+    async def update_state(
+        self,
+        name: str,
+        state: str,
+        opened_at: Optional[float],
+        failure_count: Optional[int],
+    ):
+        """Sate the new staate of the circuit breaker into the repository."""
+
 
 class InMemoryRepository(AbstractRepository):
     def __init__(self):
@@ -31,3 +41,13 @@ class InMemoryRepository(AbstractRepository):
     async def register(self, model: CircuitBreaker):
         """Add a circuit breaker into the repository."""
         self.breakers[model.name] = model
+
+    async def update_state(
+        self,
+        name: str,
+        state: str,
+        opened_at: Optional[float],
+        failure_count: Optional[int],
+    ):
+        """Because the get method return the object directly, nothing to do here."""
+        breakpoint()

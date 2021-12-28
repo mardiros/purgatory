@@ -18,14 +18,28 @@ class CircuitBreaker:
         self.ttl = ttl
         self.threshold = threshold
         self._state = ClosedState()
+        self._dirty = False
 
     @property
     def state(self) -> StateName:
         return self._state.__class__.__name__
 
-    async def set_state(self, state: "State"):
+    @property
+    def dirty(self) -> bool:
+        """True if the state of the circuit breaker has been updated."""
+        return self._dirty
 
+    @property
+    def opened_at(self) -> Optional[float]:
+        return self._state.opened_at
+
+    @property
+    def failure_count(self) -> Optional[int]:
+        return self._state.failure_count
+
+    async def set_state(self, state: "State"):
         self._state = state
+        self._dirty = True
 
     async def handle_new_request(self):
         await self._state.handle_new_request(self)
@@ -70,6 +84,9 @@ class CircuitBreaker:
 
 @dataclass
 class State(abc.ABC):
+    failure_count: Optional[int] = None
+    opened_at: Optional[float] = None
+
     @abc.abstractmethod
     async def handle_new_request(self, context: CircuitBreaker):
         """Handle new code block"""
