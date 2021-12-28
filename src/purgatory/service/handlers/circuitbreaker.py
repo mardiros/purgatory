@@ -16,5 +16,5 @@ async def save_circuit_breaker_state(
     cmd: CircuitBreakerStateChanged, uow: AbstractUnitOfWork
 ) -> None:
     await uow.circuit_breakers.update_state(
-        cmd.name, cmd.state, cmd.opened_at, cmd.failure_count
+        cmd.name, cmd.state, cmd.opened_at
     )

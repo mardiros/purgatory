@@ -1,9 +1,10 @@
-import asyncio
+from dataclasses import asdict
 from typing import cast
 
 import pytest
+from purgatory.domain.messages.events import CircuitBreakerStateChanged
 
-from purgatory.domain.model import CircuitBreaker, ClosedState, OpenedState
+from purgatory.domain.model import CircuitBreaker
 from purgatory.domain.repository import InMemoryRepository
 
 
@@ -59,12 +60,13 @@ async def test_circuitbreaker_factory_context(circuitbreaker):
 
     count = 0
 
-    with await circuitbreaker.get_breaker("my"):
+    async with await circuitbreaker.get_breaker("my"):
         count += 1
 
-    with await circuitbreaker.get_breaker("my2", threshold=42, ttl=42):
+    async with await circuitbreaker.get_breaker("my2", threshold=42, ttl=42):
         count += 1
 
+    assert (await circuitbreaker.get_breaker("my")).brk.dirty is False
     assert cast(InMemoryRepository, circuitbreaker.uow.circuit_breakers).breakers == {
         "my": CircuitBreaker(name="my", threshold=5, ttl=300),
         "my2": CircuitBreaker(name="my2", threshold=42, ttl=42),
@@ -72,60 +74,34 @@ async def test_circuitbreaker_factory_context(circuitbreaker):
 
 
 @pytest.mark.asyncio
-async def test_circuitbreaker_open_raise():
-    circuitbreaker = CircuitBreaker("my", threshold=2, ttl=42)
-    circuitbreaker.set_state(OpenedState())
+async def test_circuitbreaker_raise_state_changed_event(circuitbreaker):
 
-    count = 0
-    with pytest.raises(OpenedState):
-        with circuitbreaker:
-            count += 1
-    assert count == 0
+    evts = []
 
+    async def evt_handler(cmd: CircuitBreakerStateChanged, uow):
+        evts.append(asdict(cmd))
 
-@pytest.mark.asyncio
-async def test_circuitbreaker_open_closed_after_ttl_passed():
-    circuitbreaker = CircuitBreaker("my", threshold=5, ttl=0.1)
-    circuitbreaker.set_state(OpenedState())
-    await asyncio.sleep(0.1)
-
-    count = 0
-    with circuitbreaker:
-        count += 1
-    assert count == 1
-    assert circuitbreaker._state == ClosedState()
-
-
-@pytest.mark.asyncio
-async def test_circuitbreaker_open_reopened_after_ttl_passed():
-    circuitbreaker = CircuitBreaker("my", threshold=5, ttl=0.1)
-    circuitbreaker.set_state(OpenedState())
-    await asyncio.sleep(0.1)
-
+    circuitbreaker.messagebus.add_listener(CircuitBreakerStateChanged, evt_handler)
+    brk = await circuitbreaker.get_breaker("my", threshold=2)
     try:
-        with circuitbreaker:
+        async with brk:
             raise RuntimeError("Boom")
     except RuntimeError:
         pass
-    assert circuitbreaker._state == OpenedState()
-
-
-@pytest.mark.asyncio
-async def test_circuitbreaker_closed_state_opening():
-    circuitbreaker = CircuitBreaker("my", threshold=2, ttl=1)
-    circuitbreaker.set_state(ClosedState())
-    try:
-        with circuitbreaker:
-            raise RuntimeError("Boom")
-    except RuntimeError:
-        pass
-    assert circuitbreaker._state == ClosedState()
-    assert cast(ClosedState, circuitbreaker._state).failure_count == 1
+    assert evts == []
 
     try:
-        with circuitbreaker:
+        async with brk:
             raise RuntimeError("Boom")
     except RuntimeError:
         pass
 
-    assert circuitbreaker._state == OpenedState()
+    assert evts == [
+        {
+            "name": "my",
+            "opened_at": evts[0]["opened_at"],
+            "state": "OpenedState",
+        },
+    ]
+
+    assert (await circuitbreaker.get_breaker("my")).brk.dirty is True

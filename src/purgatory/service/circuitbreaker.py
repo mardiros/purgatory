@@ -1,5 +1,6 @@
 from functools import wraps
-from typing import Any, Callable, Optional
+from types import TracebackType
+from typing import Any, Callable, Optional, Type
 
 from purgatory.domain.model import CircuitBreaker
 from purgatory.domain.messages.commands import (
@@ -10,6 +11,34 @@ from purgatory.service.handlers import register_circuit_breaker
 from purgatory.service.handlers.circuitbreaker import save_circuit_breaker_state
 from purgatory.service.messagebus import MessageRegistry
 from purgatory.service.unit_of_work import AbstractUnitOfWork, InMemoryUnitOfWork
+
+
+class CircuitBreakerService:
+    def __init__(self, brk: CircuitBreaker, uow: AbstractUnitOfWork, messagebus: MessageRegistry) -> None:
+        self.brk = brk
+        self.uow = uow
+        self.messagebus = messagebus
+
+    async def __aenter__(self) -> "CircuitBreakerService":
+        self.brk.__enter__()
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc: Optional[BaseException],
+        tb: Optional[TracebackType],
+    ) -> None:
+        self.brk.__exit__(exc_type, exc, tb)
+        if self.brk.dirty:
+            await self.messagebus.handle(
+                CircuitBreakerStateChanged(
+                    self.brk.name,
+                    self.brk.state,
+                    self.brk.opened_at,
+                ),
+                self.uow,
+            )
 
 
 class CircuitBreakerFactory:
@@ -30,7 +59,7 @@ class CircuitBreakerFactory:
 
     async def get_breaker(
         self, circuit: str, threshold=None, ttl=None
-    ) -> CircuitBreaker:
+    ) -> CircuitBreakerService:
         async with self.uow as uow:
             brk = await uow.circuit_breakers.get(circuit)
         if brk is None:
@@ -41,28 +70,15 @@ class CircuitBreakerFactory:
                     CreateCircuitBreaker(circuit, bkr_threshold, bkr_ttl),
                     self.uow,
                 )
-        return brk
+        return CircuitBreakerService(brk, self.uow, self.messagebus)
 
     def __call__(self, circuit: str, threshold=None, ttl=None) -> Any:
         def decorator(func: Callable) -> Callable:
             @wraps(func)
             async def inner_coro(*args: Any, **kwds: Any) -> Any:
                 brk = await self.get_breaker(circuit, threshold, ttl)
-                try:
-                    with brk:
-                        return await func(*args, **kwds)
-                finally:
-                    if brk._dirty:
-                        await self.messagebus.handle(
-                            CircuitBreakerStateChanged(
-                                brk.name,
-                                brk.state,
-                                brk.opened_at,
-                                brk.failure_count,
-                            ),
-                            self.uow,
-                        )
-
+                async with brk:
+                    return await func(*args, **kwds)
             return inner_coro
 
         return decorator

@@ -9,4 +9,3 @@ class CircuitBreakerStateChanged(Event):
     name: str
     state: str
     opened_at: Optional[float]
-    failure_count: Optional[int]
