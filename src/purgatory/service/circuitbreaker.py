@@ -3,10 +3,16 @@ from types import TracebackType
 from typing import Any, Callable, Optional, Type
 
 from purgatory.domain.messages.commands import CreateCircuitBreaker
-from purgatory.domain.messages.events import CircuitBreakerStateChanged
+from purgatory.domain.messages.events import (
+    CircuitBreakerFailed,
+    CircuitBreakerStateChanged,
+)
 from purgatory.domain.model import CircuitBreaker
 from purgatory.service.handlers import register_circuit_breaker
-from purgatory.service.handlers.circuitbreaker import save_circuit_breaker_state
+from purgatory.service.handlers.circuitbreaker import (
+    inc_circuit_breaker_failure,
+    save_circuit_breaker_state,
+)
 from purgatory.service.messagebus import MessageRegistry
 from purgatory.service.unit_of_work import AbstractUnitOfWork, InMemoryUnitOfWork
 
@@ -30,13 +36,9 @@ class CircuitBreakerService:
         tb: Optional[TracebackType],
     ) -> None:
         self.brk.__exit__(exc_type, exc, tb)
-        if self.brk.dirty:
+        while self.brk.messages:
             await self.messagebus.handle(
-                CircuitBreakerStateChanged(
-                    self.brk.name,
-                    self.brk.state,
-                    self.brk.opened_at,
-                ),
+                self.brk.messages.pop(0),
                 self.uow,
             )
 
@@ -56,6 +58,10 @@ class CircuitBreakerFactory:
         self.messagebus.add_listener(
             CircuitBreakerStateChanged, save_circuit_breaker_state
         )
+        self.messagebus.add_listener(CircuitBreakerFailed, inc_circuit_breaker_failure)
+
+    async def initialize(self):
+        await self.uow.initialize()
 
     async def get_breaker(
         self, circuit: str, threshold=None, ttl=None

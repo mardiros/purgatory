@@ -9,3 +9,9 @@ class CircuitBreakerStateChanged(Event):
     name: str
     state: str
     opened_at: Optional[float]
+
+
+@dataclass(frozen=True)
+class CircuitBreakerFailed(Event):
+    name: str
+    failure_count: int

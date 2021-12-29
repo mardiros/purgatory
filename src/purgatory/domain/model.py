@@ -7,27 +7,47 @@ import abc
 import time
 from dataclasses import dataclass
 from types import TracebackType
-from typing import Optional, Type
+from typing import List, Optional, Type
 
+from purgatory.domain.messages.base import Event
+from purgatory.domain.messages.events import (
+    CircuitBreakerFailed,
+    CircuitBreakerStateChanged,
+)
 from purgatory.typing import CircuitBreakerName, StateName
 
 
 class CircuitBreaker:
-    def __init__(self, name: CircuitBreakerName, threshold: int, ttl: float) -> None:
+    name: CircuitBreakerName
+    threshold: int
+    ttl: float
+    messages: List[Event]
+
+    def __init__(
+        self,
+        name: CircuitBreakerName,
+        threshold: int,
+        ttl: float,
+        state="closed",
+        failure_count: int = 0,
+        opened_at: Optional[float] = None,
+    ) -> None:
         self.name = name
         self.ttl = ttl
         self.threshold = threshold
-        self._state = ClosedState()
-        self._dirty = False
+
+        self._state = {
+            ClosedState.name: ClosedState,
+            OpenedState.name: OpenedState,
+            HalfOpenedState.name: HalfOpenedState,
+        }[state]()
+        self._state.opened_at = opened_at
+        self._state.failure_count = failure_count
+        self.messages = []
 
     @property
     def state(self) -> StateName:
-        return self._state.__class__.__name__
-
-    @property
-    def dirty(self) -> bool:
-        """True if the state of the circuit breaker has been updated."""
-        return self._dirty
+        return self._state.name
 
     @property
     def opened_at(self) -> Optional[float]:
@@ -39,7 +59,21 @@ class CircuitBreaker:
 
     def set_state(self, state: "State"):
         self._state = state
-        self._dirty = True
+        self.messages.append(
+            CircuitBreakerStateChanged(
+                self.name,
+                self.state,
+                state.opened_at,
+            )
+        )
+
+    def mark_failure(self, failure_count):
+        self.messages.append(
+            CircuitBreakerFailed(
+                self.name,
+                failure_count,
+            )
+        )
 
     def handle_new_request(self):
         self._state.handle_new_request(self)
@@ -86,6 +120,7 @@ class CircuitBreaker:
 class State(abc.ABC):
     failure_count: Optional[int] = None
     opened_at: Optional[float] = None
+    name: str = ""
 
     @abc.abstractmethod
     def handle_new_request(self, context: CircuitBreaker):
@@ -103,10 +138,12 @@ class State(abc.ABC):
         return self.__class__ == other.__class__
 
 
+@dataclass
 class ClosedState(State):
     """In closed state, track for failure."""
 
     failure_count: int
+    name: str = "closed"
 
     def __init__(self) -> None:
         self.failure_count = 0
@@ -119,15 +156,19 @@ class ClosedState(State):
         if self.failure_count >= context.threshold:
             opened = OpenedState()
             context.set_state(opened)
+        else:
+            context.mark_failure(self.failure_count)
 
     def handle_end_request(self, context: CircuitBreaker):
         """Reset in case the request is ok"""
         self.failure_count = 0
 
 
+@dataclass
 class OpenedState(State, Exception):
     """In open state, reopen after a TTL."""
 
+    name: str = "opened"
     opened_at: float
 
     def __init__(self) -> None:
@@ -156,8 +197,11 @@ class OpenedState(State, Exception):
         """
 
 
+@dataclass
 class HalfOpenedState(State):
     """In half open state, decide to reopen or to close."""
+
+    name: str = "half-opened"
 
     def handle_new_request(self, context: CircuitBreaker):
         """In half open state, we check the result of the code block execution."""
