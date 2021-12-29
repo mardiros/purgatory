@@ -7,14 +7,30 @@ import abc
 import time
 from dataclasses import dataclass
 from types import TracebackType
-from typing import Optional, Type
+from typing import List, Optional, Type
 
+from purgatory.domain.messages.base import Event
+from purgatory.domain.messages.events import (
+    CircuitBreakerFailed,
+    CircuitBreakerStateChanged,
+)
 from purgatory.typing import CircuitBreakerName, StateName
 
 
 class CircuitBreaker:
+    name: CircuitBreakerName
+    threshold: int
+    ttl: float
+    messages: List[Event]
+
     def __init__(
-        self, name: CircuitBreakerName, threshold: int, ttl: float, state="closed"
+        self,
+        name: CircuitBreakerName,
+        threshold: int,
+        ttl: float,
+        state="closed",
+        failure_count: int = 0,
+        opened_at: Optional[float] = None,
     ) -> None:
         self.name = name
         self.ttl = ttl
@@ -25,16 +41,13 @@ class CircuitBreaker:
             OpenedState.name: OpenedState,
             HalfOpenedState.name: HalfOpenedState,
         }[state]()
-        self._dirty = False
+        self._state.opened_at = opened_at
+        self._state.failure_count = failure_count
+        self.messages = []
 
     @property
     def state(self) -> StateName:
         return self._state.name
-
-    @property
-    def dirty(self) -> bool:
-        """True if the state of the circuit breaker has been updated."""
-        return self._dirty
 
     @property
     def opened_at(self) -> Optional[float]:
@@ -46,7 +59,21 @@ class CircuitBreaker:
 
     def set_state(self, state: "State"):
         self._state = state
-        self._dirty = True
+        self.messages.append(
+            CircuitBreakerStateChanged(
+                self.name,
+                self.state,
+                state.opened_at,
+            )
+        )
+
+    def mark_failure(self, failure_count):
+        self.messages.append(
+            CircuitBreakerFailed(
+                self.name,
+                failure_count,
+            )
+        )
 
     def handle_new_request(self):
         self._state.handle_new_request(self)
@@ -129,6 +156,8 @@ class ClosedState(State):
         if self.failure_count >= context.threshold:
             opened = OpenedState()
             context.set_state(opened)
+        else:
+            context.mark_failure(self.failure_count)
 
     def handle_end_request(self, context: CircuitBreaker):
         """Reset in case the request is ok"""
