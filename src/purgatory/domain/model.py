@@ -7,7 +7,7 @@ import abc
 import time
 from dataclasses import dataclass
 from types import TracebackType
-from typing import List, Optional, Type
+from typing import Callable, List, Optional, Tuple, Type, Union, cast
 
 from purgatory.domain.messages.base import Event
 from purgatory.domain.messages.events import (
@@ -18,11 +18,22 @@ from purgatory.domain.messages.events import (
 from purgatory.typing import CircuitBreakerName, StateName
 
 
+ExcludeExcType = Type[BaseException]
+ExcludeTypeFunc = Tuple[ExcludeExcType, Callable[..., bool]]
+ExcludeType = List[
+    Union[
+        ExcludeExcType,
+        ExcludeTypeFunc,
+    ]
+]
+
+
 class CircuitBreaker:
     name: CircuitBreakerName
     threshold: int
     ttl: float
     messages: List[Event]
+    exclude_list: ExcludeType
 
     def __init__(
         self,
@@ -32,6 +43,7 @@ class CircuitBreaker:
         state="closed",
         failure_count: int = 0,
         opened_at: Optional[float] = None,
+        exclude: ExcludeType = None,
     ) -> None:
         self.name = name
         self.ttl = ttl
@@ -45,6 +57,7 @@ class CircuitBreaker:
         self._state.opened_at = opened_at
         self._state.failure_count = failure_count
         self.messages = []
+        self.exclude_list = exclude or []
 
     @property
     def state(self) -> StateName:
@@ -87,7 +100,21 @@ class CircuitBreaker:
         self._state.handle_new_request(self)
 
     def handle_exception(self, exc: BaseException):
-        self._state.handle_exception(self, exc)
+        failed = True
+        for exctype_func in self.exclude_list:
+
+            if isinstance(exctype_func, tuple):
+                exctype, func = cast(ExcludeTypeFunc, exctype_func)
+            else:
+                exctype, func = cast(ExcludeExcType, exctype_func), lambda exc: True
+
+            if isinstance(exc, exctype):
+                failed = not func(exc)
+                break
+        if failed:
+            self._state.handle_exception(self, exc)
+        else:
+            self._state.handle_end_request(self)
 
     def handle_end_request(self):
         self._state.handle_end_request(self)
@@ -166,7 +193,7 @@ class ClosedState(State):
 
     def handle_end_request(self, context: CircuitBreaker):
         """Reset in case the request is ok"""
-        if self.failure_count >= 0:
+        if self.failure_count > 0:
             context.recover_failure()
         self.failure_count = 0
 
@@ -193,14 +220,14 @@ class OpenedState(State, Exception):
         """
         When the circuit is opened, the OpenState is raised before entering.
 
-        this function is never called.
+        This function is never called.
         """
 
     def handle_end_request(self):
         """
         When the circuit is opened, the OpenState is raised before entering.
 
-        this function is never called.
+        This function is never called.
         """
 
 
@@ -215,8 +242,10 @@ class HalfOpenedState(State):
         context.recover_failure()
 
     def handle_exception(self, context: CircuitBreaker, exc: BaseException):
+        """If an exception happens, then the circuit is reopen directly."""
         opened = OpenedState()
         context.set_state(opened)
 
     def handle_end_request(self, context: CircuitBreaker):
+        """Otherwise, the circuit is closed, back to normal."""
         context.set_state(ClosedState())

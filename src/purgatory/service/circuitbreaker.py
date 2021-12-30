@@ -8,7 +8,7 @@ from purgatory.domain.messages.events import (
     CircuitBreakerRecovered,
     CircuitBreakerStateChanged,
 )
-from purgatory.domain.model import CircuitBreaker
+from purgatory.domain.model import CircuitBreaker, ExcludeType
 from purgatory.service.handlers import register_circuit_breaker
 from purgatory.service.handlers.circuitbreaker import (
     inc_circuit_breaker_failure,
@@ -49,11 +49,13 @@ class CircuitBreakerFactory:
     def __init__(
         self,
         default_threshold: int = 5,
-        default_ttl: int = 300,
+        default_ttl: int = 30,
+        exclude: ExcludeType = None,
         uow: Optional[AbstractUnitOfWork] = None,
     ):
         self.default_threshold = default_threshold
         self.default_ttl = default_ttl
+        self.global_exclude = exclude or []
         self.uow = uow or InMemoryUnitOfWork()
         self.messagebus = MessageRegistry()
         self.messagebus.add_listener(CreateCircuitBreaker, register_circuit_breaker)
@@ -67,7 +69,7 @@ class CircuitBreakerFactory:
         await self.uow.initialize()
 
     async def get_breaker(
-        self, circuit: str, threshold=None, ttl=None
+        self, circuit: str, threshold=None, ttl=None, exclude: ExcludeType = None
     ) -> CircuitBreakerService:
         async with self.uow as uow:
             brk = await uow.circuit_breakers.get(circuit)
@@ -79,15 +81,18 @@ class CircuitBreakerFactory:
                     CreateCircuitBreaker(circuit, bkr_threshold, bkr_ttl),
                     self.uow,
                 )
+        brk.exclude_list = (exclude or []) + self.global_exclude
         return CircuitBreakerService(brk, self.uow, self.messagebus)
 
-    def __call__(self, circuit: str, threshold=None, ttl=None) -> Any:
+    def __call__(
+        self, circuit: str, threshold=None, ttl=None, exclude: ExcludeType = None
+    ) -> Any:
         def decorator(func: Callable) -> Callable:
             @wraps(func)
-            async def inner_coro(*args: Any, **kwds: Any) -> Any:
-                brk = await self.get_breaker(circuit, threshold, ttl)
+            async def inner_coro(*args: Any, **kwargs: Any) -> Any:
+                brk = await self.get_breaker(circuit, threshold, ttl, exclude)
                 async with brk:
-                    return await func(*args, **kwds)
+                    return await func(*args, **kwargs)
 
             return inner_coro
 
