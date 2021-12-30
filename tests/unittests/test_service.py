@@ -135,11 +135,62 @@ async def test_circuitbreaker_factory_context(circuitbreaker):
     async with await circuitbreaker.get_breaker("my2", threshold=42, ttl=42):
         count += 1
 
+    async with await circuitbreaker.get_breaker("my", exclude=[ValueError]):
+        count += 1
+
+    assert count == 3
     assert (await circuitbreaker.get_breaker("my")).brk.messages == []
     assert cast(InMemoryRepository, circuitbreaker.uow.circuit_breakers).breakers == {
         "my": CircuitBreaker(name="my", threshold=5, ttl=30),
         "my2": CircuitBreaker(name="my2", threshold=42, ttl=42),
     }
+
+
+@pytest.mark.asyncio
+async def test_circuitbreaker_factory_context_exclude_exceptions_with_context(
+    circuitbreaker,
+):
+    cbr = await circuitbreaker.get_breaker("my", threshold=1, exclude=[ValueError])
+    try:
+        async with cbr:
+            raise ValueError(42)
+    except ValueError:
+        pass
+    assert cbr.brk._state.failure_count == 0
+    assert cbr.brk.state == "closed"
+
+    try:
+        async with await circuitbreaker.get_breaker("my", exclude=[RuntimeError]):
+            raise ValueError(42)
+    except ValueError:
+        pass
+    assert cbr.brk.state == "opened"
+
+
+@pytest.mark.asyncio
+async def test_circuitbreaker_factory_context_exclude_exceptions_with_decorator(
+    circuitbreaker,
+):
+    @circuitbreaker("my", threshold=1, exclude=[ValueError])
+    async def raise_error(typ_: str):
+        if typ_ == "value":
+            raise ValueError(42)
+        raise RuntimeError("boom")
+
+    try:
+        await raise_error("value")
+    except ValueError:
+        pass
+
+    assert (await circuitbreaker.get_breaker("my")).brk.state == "closed"
+    assert (await circuitbreaker.get_breaker("my")).brk._state.failure_count == 0
+
+    try:
+        await raise_error("runtime")
+    except RuntimeError:
+        pass
+
+    assert (await circuitbreaker.get_breaker("my")).brk.state == "opened"
 
 
 @pytest.mark.asyncio

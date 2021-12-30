@@ -83,13 +83,15 @@ class CircuitBreakerFactory:
             brk.exclude_list = exclude
         return CircuitBreakerService(brk, self.uow, self.messagebus)
 
-    def __call__(self, circuit: str, threshold=None, ttl=None) -> Any:
+    def __call__(
+        self, circuit: str, threshold=None, ttl=None, exclude: ExcludeType = None
+    ) -> Any:
         def decorator(func: Callable) -> Callable:
             @wraps(func)
-            async def inner_coro(*args: Any, **kwds: Any) -> Any:
-                brk = await self.get_breaker(circuit, threshold, ttl)
+            async def inner_coro(*args: Any, **kwargs: Any) -> Any:
+                brk = await self.get_breaker(circuit, threshold, ttl, exclude)
                 async with brk:
-                    return await func(*args, **kwds)
+                    return await func(*args, **kwargs)
 
             return inner_coro
 
