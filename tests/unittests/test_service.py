@@ -223,3 +223,39 @@ async def test_circuitbreaker_raise_state_changed_event(circuitbreaker):
             "state": "opened",
         },
     ]
+
+
+@pytest.mark.asyncio
+async def test_circuit_breaker_factory_global_exclude():
+    circuitbreaker = CircuitBreakerFactory(exclude=[ValueError])
+
+    @circuitbreaker("my", threshold=1, exclude=[KeyError])
+    async def raise_error(typ_: str):
+        if typ_ == "value":
+            raise ValueError(42)
+        if typ_ == "key":
+            raise KeyError(42)
+        raise RuntimeError("boom")
+
+    try:
+        await raise_error("value")
+    except ValueError:
+        pass
+
+    assert (await circuitbreaker.get_breaker("my")).brk.state == "closed"
+    assert (await circuitbreaker.get_breaker("my")).brk._state.failure_count == 0
+
+    try:
+        await raise_error("key")
+    except KeyError:
+        pass
+
+    assert (await circuitbreaker.get_breaker("my")).brk.state == "closed"
+    assert (await circuitbreaker.get_breaker("my")).brk._state.failure_count == 0
+
+    try:
+        await raise_error("runtime")
+    except RuntimeError:
+        pass
+
+    assert (await circuitbreaker.get_breaker("my")).brk.state == "opened"

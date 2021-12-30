@@ -50,10 +50,12 @@ class CircuitBreakerFactory:
         self,
         default_threshold: int = 5,
         default_ttl: int = 30,
+        exclude: ExcludeType = None,
         uow: Optional[AbstractUnitOfWork] = None,
     ):
         self.default_threshold = default_threshold
         self.default_ttl = default_ttl
+        self.global_exclude = exclude or []
         self.uow = uow or InMemoryUnitOfWork()
         self.messagebus = MessageRegistry()
         self.messagebus.add_listener(CreateCircuitBreaker, register_circuit_breaker)
@@ -79,8 +81,7 @@ class CircuitBreakerFactory:
                     CreateCircuitBreaker(circuit, bkr_threshold, bkr_ttl),
                     self.uow,
                 )
-        if exclude:
-            brk.exclude_list = exclude
+        brk.exclude_list = (exclude or []) + self.global_exclude
         return CircuitBreakerService(brk, self.uow, self.messagebus)
 
     def __call__(
