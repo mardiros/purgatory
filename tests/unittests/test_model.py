@@ -32,6 +32,12 @@ async def test_circuitbreaker_open_closed_after_ttl_passed():
     circuitbreaker = CircuitBreaker("my", threshold=5, ttl=0.1)
     state = OpenedState()
     circuitbreaker.set_state(state)
+    assert circuitbreaker.messages == [
+        CircuitBreakerStateChanged(
+            name="my", state="opened", opened_at=state.opened_at
+        ),
+    ]
+    circuitbreaker.messages.clear()
     await asyncio.sleep(0.1)
 
     count = 0
@@ -39,9 +45,6 @@ async def test_circuitbreaker_open_closed_after_ttl_passed():
         count += 1
     assert count == 1
     assert circuitbreaker.messages == [
-        CircuitBreakerStateChanged(
-            name="my", state="opened", opened_at=state.opened_at
-        ),
         CircuitBreakerStateChanged(name="my", state="half-opened", opened_at=None),
         CircuitBreakerStateChanged(name="my", state="closed", opened_at=None),
     ]
@@ -83,6 +86,8 @@ async def test_circuitbreaker_closed_state_opening():
     except RuntimeError:
         pass
     assert circuitbreaker.messages == [CircuitBreakerFailed(name="my", failure_count=1)]
+    circuitbreaker.messages.clear()
+
     state = ClosedState()
     state.failure_count = 1
     assert circuitbreaker._state == state
@@ -95,7 +100,6 @@ async def test_circuitbreaker_closed_state_opening():
         pass
 
     assert circuitbreaker.messages == [
-        CircuitBreakerFailed(name="my", failure_count=1),
         CircuitBreakerStateChanged(
             name="my", state="opened", opened_at=circuitbreaker.opened_at
         ),
