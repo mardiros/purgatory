@@ -14,7 +14,6 @@ from purgatory.domain.model import CircuitBreaker, ClosedState, OpenedState
 async def test_circuitbreaker_open_raise():
     circuitbreaker = CircuitBreaker("my", threshold=2, ttl=42)
     circuitbreaker.set_state(OpenedState())
-    circuitbreaker._dirty = False
     count = 0
     with pytest.raises(OpenedState):
         with circuitbreaker:
@@ -22,7 +21,7 @@ async def test_circuitbreaker_open_raise():
     assert count == 0
     assert circuitbreaker.messages == [
         CircuitBreakerStateChanged(
-            name="my", state="opened", opened_at=circuitbreaker.messages[0].opened_at
+            name="my", state="opened", opened_at=circuitbreaker.opened_at
         ),
     ]
 
@@ -66,11 +65,11 @@ async def test_circuitbreaker_open_reopened_after_ttl_passed():
         ),
         CircuitBreakerStateChanged(name="my", state="half-opened", opened_at=None),
         CircuitBreakerStateChanged(
-            name="my", state="opened", opened_at=circuitbreaker._state.opened_at
+            name="my", state="opened", opened_at=circuitbreaker.opened_at
         ),
     ]
     state = OpenedState()
-    state.opened_at = cast(OpenedState, circuitbreaker._state).opened_at
+    state.opened_at = circuitbreaker.opened_at or 0
     assert circuitbreaker._state == state
 
 
@@ -86,7 +85,7 @@ async def test_circuitbreaker_closed_state_opening():
     state = ClosedState()
     state.failure_count = 1
     assert circuitbreaker._state == state
-    assert cast(ClosedState, circuitbreaker._state).failure_count == 1
+    assert circuitbreaker.failure_count == 1
 
     try:
         with circuitbreaker:
@@ -97,9 +96,9 @@ async def test_circuitbreaker_closed_state_opening():
     assert circuitbreaker.messages == [
         CircuitBreakerFailed(name="my", failure_count=1),
         CircuitBreakerStateChanged(
-            name="my", state="opened", opened_at=circuitbreaker._state.opened_at
+            name="my", state="opened", opened_at=circuitbreaker.opened_at
         ),
     ]
     state = OpenedState()
-    state.opened_at = cast(OpenedState, circuitbreaker._state).opened_at
+    state.opened_at = circuitbreaker.opened_at or 0
     assert circuitbreaker._state == state
