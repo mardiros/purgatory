@@ -5,12 +5,14 @@ from typing import Any, Callable, Optional, Type
 from purgatory.domain.messages.commands import CreateCircuitBreaker
 from purgatory.domain.messages.events import (
     CircuitBreakerFailed,
+    CircuitBreakerRecovered,
     CircuitBreakerStateChanged,
 )
 from purgatory.domain.model import CircuitBreaker
 from purgatory.service.handlers import register_circuit_breaker
 from purgatory.service.handlers.circuitbreaker import (
     inc_circuit_breaker_failure,
+    reset_failure,
     save_circuit_breaker_state,
 )
 from purgatory.service.messagebus import MessageRegistry
@@ -59,6 +61,7 @@ class CircuitBreakerFactory:
             CircuitBreakerStateChanged, save_circuit_breaker_state
         )
         self.messagebus.add_listener(CircuitBreakerFailed, inc_circuit_breaker_failure)
+        self.messagebus.add_listener(CircuitBreakerRecovered, reset_failure)
 
     async def initialize(self):
         await self.uow.initialize()

@@ -142,9 +142,6 @@ class State(abc.ABC):
     def handle_end_request(self, context: CircuitBreaker):
         """Handle proper execution after the code block"""
 
-    def __eq__(self, other: object) -> bool:
-        return self.__class__ == other.__class__
-
 
 @dataclass
 class ClosedState(State):

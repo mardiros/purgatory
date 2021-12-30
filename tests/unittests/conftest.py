@@ -48,7 +48,7 @@ class FakeRedis:
     async def incr(self, key):
         if not self.initialized:
             raise RuntimeError("Unititialized")
-        val = self.storage.get(key, 0) + 1
+        val = int(self.storage.get(key, 0)) + 1
         self.storage[key] = val
 
 
