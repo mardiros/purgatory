@@ -117,8 +117,44 @@ def test_circuitbreaker_reset_after_failure():
         pass
 
     assert circuitbreaker.messages == [CircuitBreakerFailed(name="my", failure_count=1)]
+    assert circuitbreaker.failure_count == 1
     circuitbreaker.messages.clear()
     with circuitbreaker:
         pass
 
     assert circuitbreaker.messages == [CircuitBreakerRecovered(name="my")]
+
+
+@pytest.mark.asyncio
+def test_circuitbreaker_can_exclude_exception():
+    class MyException(RuntimeError):
+        pass
+
+    circuitbreaker = CircuitBreaker("my", threshold=5, ttl=1, exclude=[MyException])
+    try:
+        with circuitbreaker:
+            raise MyException("Boom")
+    except MyException:
+        pass
+
+    assert circuitbreaker.messages == []
+    assert circuitbreaker.failure_count == 0
+
+    try:
+        with circuitbreaker:
+            raise RuntimeError("Boom")
+    except RuntimeError:
+        pass
+
+    assert circuitbreaker.messages == [CircuitBreakerFailed(name="my", failure_count=1)]
+    assert circuitbreaker.failure_count == 1
+    circuitbreaker.messages.clear()
+
+    try:
+        with circuitbreaker:
+            raise MyException("Boom")
+    except MyException:
+        pass
+
+    assert circuitbreaker.messages == [CircuitBreakerRecovered(name="my")]
+    assert circuitbreaker.failure_count == 0

@@ -23,6 +23,7 @@ class CircuitBreaker:
     threshold: int
     ttl: float
     messages: List[Event]
+    exclude_list: List[Type[Exception]]
 
     def __init__(
         self,
@@ -32,6 +33,7 @@ class CircuitBreaker:
         state="closed",
         failure_count: int = 0,
         opened_at: Optional[float] = None,
+        exclude: Optional[List[Type[Exception]]] = None,
     ) -> None:
         self.name = name
         self.ttl = ttl
@@ -45,6 +47,7 @@ class CircuitBreaker:
         self._state.opened_at = opened_at
         self._state.failure_count = failure_count
         self.messages = []
+        self.exclude_list = exclude or []
 
     @property
     def state(self) -> StateName:
@@ -87,7 +90,15 @@ class CircuitBreaker:
         self._state.handle_new_request(self)
 
     def handle_exception(self, exc: BaseException):
-        self._state.handle_exception(self, exc)
+        failed = True
+        for exctype in self.exclude_list:
+            if isinstance(exc, exctype):
+                failed = False
+                break
+        if failed:
+            self._state.handle_exception(self, exc)
+        else:
+            self._state.handle_end_request(self)
 
     def handle_end_request(self):
         self._state.handle_end_request(self)
