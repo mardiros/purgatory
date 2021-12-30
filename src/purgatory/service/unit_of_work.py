@@ -3,7 +3,8 @@ from __future__ import annotations
 
 import abc
 from types import TracebackType
-from typing import Optional, Type
+from typing import Generator, Optional, Type
+from purgatory.domain.messages import Message
 
 from purgatory.domain.repository import (
     AbstractRepository,
@@ -15,7 +16,7 @@ from purgatory.domain.repository import (
 class AbstractUnitOfWork(abc.ABC):
     circuit_breakers: AbstractRepository
 
-    def collect_new_events(self):
+    def collect_new_events(self) -> Generator[Message, None, None]:
         while self.circuit_breakers.messages:
             yield self.circuit_breakers.messages.pop(0)
 

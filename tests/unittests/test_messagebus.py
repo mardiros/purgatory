@@ -3,6 +3,7 @@ from dataclasses import dataclass
 import pytest
 
 from purgatory.domain.messages import Command, Event
+from purgatory.service.messagebus import ConfigurationError
 from purgatory.service.unit_of_work import InMemoryUnitOfWork
 
 
@@ -84,3 +85,69 @@ async def test_messagebus(messagebus):
     assert (
         DummyModel.counter == 11
     ), "The command should raise an event that is not handled anymore "
+
+
+@pytest.mark.asyncio
+async def test_messagebus_handle_only_message(messagebus):
+    class Msg:
+        def __repr__(self):
+            return "<msg>"
+
+    with pytest.raises(RuntimeError) as ctx:
+        await messagebus.handle(Msg(), FakeUnitOfWorkWithDummyEvents())
+    assert str(ctx.value) == "<msg> was not an Event or Command"
+
+
+@pytest.mark.asyncio
+async def test_messagebus_cannot_register_handler_twice(messagebus):
+
+    messagebus.add_listener(DummyCommand, listen_command)
+    with pytest.raises(ConfigurationError) as ctx:
+        messagebus.add_listener(DummyCommand, listen_command)
+    assert (
+        str(ctx.value)
+        == "<class 'tests.unittests.test_messagebus.DummyCommand'> command "
+        "has been registered twice"
+    )
+    messagebus.remove_listener(DummyCommand, listen_command)
+    messagebus.add_listener(DummyCommand, listen_command)
+
+
+@pytest.mark.asyncio
+async def test_messagebus_cannot_register_handler_on_non_message(messagebus):
+    with pytest.raises(ConfigurationError) as ctx:
+        messagebus.add_listener(object, listen_command)
+    assert (
+        str(ctx.value)
+        == "Invalid usage of the listen decorator: type <class 'object'> "
+        "should be a command or an event"
+    )
+
+
+@pytest.mark.asyncio
+async def test_messagebus_cannot_unregister_non_unregistered_handler(messagebus):
+    with pytest.raises(ConfigurationError) as ctx:
+        messagebus.remove_listener(DummyCommand, listen_command)
+    assert (
+        str(ctx.value)
+        == "<class 'tests.unittests.test_messagebus.DummyCommand'> command "
+        "has not been registered"
+    )
+
+    with pytest.raises(ConfigurationError) as ctx:
+        messagebus.remove_listener(DummyEvent, listen_event)
+
+    assert (
+        str(ctx.value)
+        == "<class 'tests.unittests.test_messagebus.DummyEvent'> event "
+        "has not been registered"
+    )
+
+    with pytest.raises(ConfigurationError) as ctx:
+        messagebus.remove_listener(object, listen_command)
+
+    assert (
+        str(ctx.value)
+        == "Invalid usage of the listen decorator: type <class 'object'> "
+        "should be a command or an event"
+    )

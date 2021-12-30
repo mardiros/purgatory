@@ -1,4 +1,5 @@
 import pytest
+import time
 
 from purgatory.domain.model import CircuitBreaker
 from purgatory.domain.repository import InMemoryRepository, RedisRepository
@@ -32,9 +33,7 @@ async def test_redis_respository_workflow(
     # inmemory_repository: InMemoryRepository,
     redis_repository: RedisRepository,
 ):
-    repository = {"redis": redis_repository}[
-        repository
-    ]
+    repository = {"redis": redis_repository}[repository]
 
     breaker = CircuitBreaker("foo", 40, 10)
     await repository.initialize()
@@ -48,6 +47,20 @@ async def test_redis_respository_workflow(
     breaker = await repository.get("foo")
     assert breaker.failure_count == 2
 
+    opened_at = time.time()
+    await repository.update_state("foo", state="opened", opened_at=opened_at)
+    breaker = await repository.get("foo")
+    assert breaker.failure_count == 2
+    assert breaker.opened_at == opened_at
+
+    await repository.update_state("foo", state="half-opened", opened_at=None)
+    breaker = await repository.get("foo")
+    assert breaker.opened_at is None
+
     await repository.reset_failure("foo")
     breaker = await repository.get("foo")
     assert breaker.failure_count == 0
+
+    await repository.update_state("foo", state="closed", opened_at=None)
+    breaker = await repository.get("foo")
+    assert breaker.opened_at is None

@@ -27,30 +27,32 @@ class MessageRegistry(object):
     def add_listener(self, msg_type: type, callback: Callable):
         if issubclass(msg_type, Command):
             if msg_type in self.commands_registry:
-                raise ConfigurationError("%s command has been registered twice")
+                raise ConfigurationError(
+                    f"{msg_type} command has been registered twice"
+                )
             self.commands_registry[msg_type] = callback
         elif issubclass(msg_type, Event):
             self.events_registry[msg_type].append(callback)
         else:
             raise ConfigurationError(
-                "Invalid usage of the listen decorator: "
-                "type %s should be a command or an event"
+                f"Invalid usage of the listen decorator: "
+                f"type {msg_type} should be a command or an event"
             )
 
     def remove_listener(self, msg_type: type, callback: Callable):
         if issubclass(msg_type, Command):
             if msg_type not in self.commands_registry:
-                raise ConfigurationError("%s command has not been registered")
+                raise ConfigurationError(f"{msg_type} command has not been registered")
             del self.commands_registry[msg_type]
         elif issubclass(msg_type, Event):
             try:
                 self.events_registry[msg_type].remove(callback)
             except ValueError:
-                log.error(f"Removing an unregistered callback {callback} has no effect")
+                raise ConfigurationError(f"{msg_type} event has not been registered")
         else:
             raise ConfigurationError(
-                "Invalid usage of the listen decorator: "
-                "type %s should be a command or an event"
+                f"Invalid usage of the listen decorator: "
+                f"type {msg_type} should be a command or an event"
             )
 
     async def handle(
