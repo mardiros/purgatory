@@ -214,7 +214,8 @@ class HalfOpenedState(State):
     name: str = "half-opened"
 
     def handle_new_request(self, context: CircuitBreaker):
-        """In half open state, we check the result of the code block execution."""
+        """In half open state, we reset the failure counter to restart 0."""
+        context.recover_failure()
 
     def handle_exception(self, context: CircuitBreaker, exc: BaseException):
         opened = OpenedState()

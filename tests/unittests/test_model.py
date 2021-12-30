@@ -45,6 +45,7 @@ async def test_circuitbreaker_open_closed_after_ttl_passed():
     assert count == 1
     assert circuitbreaker.messages == [
         CircuitBreakerStateChanged(name="my", state="half-opened", opened_at=None),
+        CircuitBreakerRecovered(name="my"),
         CircuitBreakerStateChanged(name="my", state="closed", opened_at=None),
     ]
     assert circuitbreaker._state == ClosedState()
@@ -67,6 +68,7 @@ async def test_circuitbreaker_open_reopened_after_ttl_passed():
             name="my", state="opened", opened_at=state.opened_at
         ),
         CircuitBreakerStateChanged(name="my", state="half-opened", opened_at=None),
+        CircuitBreakerRecovered(name="my"),
         CircuitBreakerStateChanged(
             name="my", state="opened", opened_at=circuitbreaker.opened_at
         ),
