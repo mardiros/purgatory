@@ -28,7 +28,7 @@ async def inc_circuit_breaker_failure(
     await uow.circuit_breakers.inc_failures(evt.name, evt.failure_count)
 
 
-async def reset_circuit_breaker_failure(
+async def reset_failure(
     evt: CircuitBreakerRecovered, uow: AbstractUnitOfWork
 ) -> None:
-    await uow.circuit_breakers.reset_circuit_breaker_failure(evt.name)
+    await uow.circuit_breakers.reset_failure(evt.name)

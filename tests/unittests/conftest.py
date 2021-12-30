@@ -4,7 +4,7 @@ from typing import Any, Optional, cast
 import pytest
 
 from purgatory import CircuitBreakerFactory
-from purgatory.domain.repository import RedisRepository
+from purgatory.domain.repository import InMemoryRepository, RedisRepository
 from purgatory.service.messagebus import MessageRegistry
 from purgatory.service.unit_of_work import RedisUnitOfWork
 
@@ -55,6 +55,11 @@ class FakeRedis:
 @pytest.fixture()
 def fake_redis():
     yield FakeRedis()
+
+
+@pytest.fixture()
+def inmemory_repository():
+    return InMemoryRepository()
 
 
 @pytest.fixture()

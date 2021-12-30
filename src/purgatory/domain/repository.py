@@ -40,7 +40,7 @@ class AbstractRepository(abc.ABC):
         """Increment the number of failure in the repository."""
 
     @abc.abstractmethod
-    async def reset_circuit_breaker_failure(self, name: str):
+    async def reset_failure(self, name: str):
         """Reset the number of failure in the repository."""
 
 
@@ -68,7 +68,7 @@ class InMemoryRepository(AbstractRepository):
     async def inc_failures(self, name: str, failure_count: int):
         """Because the get method return the object directly, nothing to do here."""
 
-    async def reset_circuit_breaker_failure(self, name: str):
+    async def reset_failure(self, name: str):
         """Reset the number of failure in the repository."""
 
 
@@ -127,6 +127,6 @@ class RedisRepository(AbstractRepository):
         """Store the new state in the repository."""
         await self.redis.incr(f"{self.prefix}{name}::failure_count")
 
-    async def reset_circuit_breaker_failure(self, name: str):
+    async def reset_failure(self, name: str):
         """Reset the number of failure in the repository."""
         await self.redis.set(f"{self.prefix}{name}::failure_count", "0")
