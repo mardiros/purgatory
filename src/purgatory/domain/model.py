@@ -166,7 +166,7 @@ class ClosedState(State):
 
     def handle_end_request(self, context: CircuitBreaker):
         """Reset in case the request is ok"""
-        if self.failure_count >= 0:
+        if self.failure_count > 0:
             context.recover_failure()
         self.failure_count = 0
 
