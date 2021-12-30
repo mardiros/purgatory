@@ -10,8 +10,7 @@ from purgatory.domain.messages.events import (
 from purgatory.domain.model import CircuitBreaker, ClosedState, OpenedState
 
 
-@pytest.mark.asyncio
-async def test_circuitbreaker_open_raise():
+def test_circuitbreaker_open_raise():
     circuitbreaker = CircuitBreaker("my", threshold=2, ttl=42)
     circuitbreaker.set_state(OpenedState())
     count = 0
@@ -78,8 +77,7 @@ async def test_circuitbreaker_open_reopened_after_ttl_passed():
     assert circuitbreaker._state == state
 
 
-@pytest.mark.asyncio
-async def test_circuitbreaker_closed_state_opening():
+def test_circuitbreaker_closed_state_opening():
     circuitbreaker = CircuitBreaker("my", threshold=2, ttl=1)
     try:
         with circuitbreaker:
@@ -110,8 +108,7 @@ async def test_circuitbreaker_closed_state_opening():
     assert circuitbreaker._state == state
 
 
-@pytest.mark.asyncio
-async def test_circuitbreaker_reset_after_failure():
+def test_circuitbreaker_reset_after_failure():
     circuitbreaker = CircuitBreaker("my", threshold=5, ttl=1)
     try:
         with circuitbreaker:
