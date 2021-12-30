@@ -29,7 +29,7 @@ async def test_circuitbreaker_factory_decorator(circuitbreaker: CircuitBreakerFa
         await fail_or_success(fail=True)
 
     brk = await circuitbreaker.uow.circuit_breakers.get("client")
-    assert brk == CircuitBreaker(name="client", threshold=5, ttl=300)
+    assert brk == CircuitBreaker(name="client", threshold=5, ttl=30)
     # assert circuitbreaker.breakers["client"]._state._state.failure_count == 1
 
     @circuitbreaker(circuit="client2", threshold=15)
@@ -38,7 +38,7 @@ async def test_circuitbreaker_factory_decorator(circuitbreaker: CircuitBreakerFa
 
     await _success2()
     brk = await circuitbreaker.uow.circuit_breakers.get("client2")
-    assert brk == CircuitBreaker(name="client2", threshold=15, ttl=300)
+    assert brk == CircuitBreaker(name="client2", threshold=15, ttl=30)
 
     @circuitbreaker(circuit="client3", ttl=60)
     async def _success3():
@@ -88,6 +88,33 @@ async def test_redis_circuitbreaker_factory_decorator(
     await fail()
 
 
+@pytest.mark.parametrize("uow", ["inmemory", "redis"])
+@pytest.mark.parametrize(
+    "cbr",
+    [
+        (("cname",), ("cname", 5, 30, [])),
+        (("cname", 7), ("cname", 7, 30, [])),
+        (("cname", 7, 42), ("cname", 7, 42, [])),
+        (("cname", 7, 42, [ValueError]), ("cname", 7, 42, [ValueError])),
+    ],
+)
+@pytest.mark.asyncio
+async def test_get_breaker(
+    uow,
+    cbr,
+    circuitbreaker: CircuitBreakerFactory,
+    circuitbreaker_redis: CircuitBreakerFactory,
+):
+    cbreaker = {"inmemory": circuitbreaker, "redis": circuitbreaker_redis}[uow]
+    await cbreaker.initialize()
+
+    breaker = await cbreaker.get_breaker(*cbr[0])
+    assert breaker.brk.name == cbr[1][0]
+    assert breaker.brk.threshold == cbr[1][1]
+    assert breaker.brk.ttl == cbr[1][2]
+    assert breaker.brk.exclude_list == cbr[1][3]
+
+
 @pytest.mark.parametrize("state", ["closed", "opened", "half-opened"])
 def test_circuitbreaker_repr(state):
     circuitbreaker = CircuitBreaker("plop", 5, 30, state)
@@ -110,7 +137,7 @@ async def test_circuitbreaker_factory_context(circuitbreaker):
 
     assert (await circuitbreaker.get_breaker("my")).brk.messages == []
     assert cast(InMemoryRepository, circuitbreaker.uow.circuit_breakers).breakers == {
-        "my": CircuitBreaker(name="my", threshold=5, ttl=300),
+        "my": CircuitBreaker(name="my", threshold=5, ttl=30),
         "my2": CircuitBreaker(name="my2", threshold=42, ttl=42),
     }
 

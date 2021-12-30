@@ -8,7 +8,7 @@ from purgatory.domain.messages.events import (
     CircuitBreakerRecovered,
     CircuitBreakerStateChanged,
 )
-from purgatory.domain.model import CircuitBreaker
+from purgatory.domain.model import CircuitBreaker, ExcludeType
 from purgatory.service.handlers import register_circuit_breaker
 from purgatory.service.handlers.circuitbreaker import (
     inc_circuit_breaker_failure,
@@ -49,7 +49,7 @@ class CircuitBreakerFactory:
     def __init__(
         self,
         default_threshold: int = 5,
-        default_ttl: int = 300,
+        default_ttl: int = 30,
         uow: Optional[AbstractUnitOfWork] = None,
     ):
         self.default_threshold = default_threshold
@@ -67,7 +67,7 @@ class CircuitBreakerFactory:
         await self.uow.initialize()
 
     async def get_breaker(
-        self, circuit: str, threshold=None, ttl=None
+        self, circuit: str, threshold=None, ttl=None, exclude: ExcludeType = None
     ) -> CircuitBreakerService:
         async with self.uow as uow:
             brk = await uow.circuit_breakers.get(circuit)
@@ -79,6 +79,8 @@ class CircuitBreakerFactory:
                     CreateCircuitBreaker(circuit, bkr_threshold, bkr_ttl),
                     self.uow,
                 )
+        if exclude:
+            brk.exclude_list = exclude
         return CircuitBreakerService(brk, self.uow, self.messagebus)
 
     def __call__(self, circuit: str, threshold=None, ttl=None) -> Any:

@@ -220,14 +220,14 @@ class OpenedState(State, Exception):
         """
         When the circuit is opened, the OpenState is raised before entering.
 
-        this function is never called.
+        This function is never called.
         """
 
     def handle_end_request(self):
         """
         When the circuit is opened, the OpenState is raised before entering.
 
-        this function is never called.
+        This function is never called.
         """
 
 
@@ -242,8 +242,10 @@ class HalfOpenedState(State):
         context.recover_failure()
 
     def handle_exception(self, context: CircuitBreaker, exc: BaseException):
+        """If an exception happens, then the circuit is reopen directly."""
         opened = OpenedState()
         context.set_state(opened)
 
     def handle_end_request(self, context: CircuitBreaker):
+        """Otherwise, the circuit is closed, back to normal."""
         context.set_state(ClosedState())
