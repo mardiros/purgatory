@@ -15,3 +15,8 @@ class CircuitBreakerStateChanged(Event):
 class CircuitBreakerFailed(Event):
     name: str
     failure_count: int
+
+
+@dataclass(frozen=True)
+class CircuitBreakerRecovered(Event):
+    name: str

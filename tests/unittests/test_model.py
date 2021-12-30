@@ -5,6 +5,7 @@ import pytest
 
 from purgatory.domain.messages.events import (
     CircuitBreakerFailed,
+    CircuitBreakerRecovered,
     CircuitBreakerStateChanged,
 )
 from purgatory.domain.model import CircuitBreaker, ClosedState, OpenedState
@@ -102,3 +103,20 @@ async def test_circuitbreaker_closed_state_opening():
     state = OpenedState()
     state.opened_at = circuitbreaker.opened_at or 0
     assert circuitbreaker._state == state
+
+
+@pytest.mark.asyncio
+async def test_circuitbreaker_reset_after_failure():
+    circuitbreaker = CircuitBreaker("my", threshold=5, ttl=1)
+    try:
+        with circuitbreaker:
+            raise RuntimeError("Boom")
+    except RuntimeError:
+        pass
+
+    assert circuitbreaker.messages == [CircuitBreakerFailed(name="my", failure_count=1)]
+    circuitbreaker.messages.clear()
+    with circuitbreaker:
+        pass
+
+    assert circuitbreaker.messages == [CircuitBreakerRecovered(name="my")]

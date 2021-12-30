@@ -12,6 +12,7 @@ from typing import List, Optional, Type
 from purgatory.domain.messages.base import Event
 from purgatory.domain.messages.events import (
     CircuitBreakerFailed,
+    CircuitBreakerRecovered,
     CircuitBreakerStateChanged,
 )
 from purgatory.typing import CircuitBreakerName, StateName
@@ -72,6 +73,13 @@ class CircuitBreaker:
             CircuitBreakerFailed(
                 self.name,
                 failure_count,
+            )
+        )
+
+    def recover_failure(self):
+        self.messages.append(
+            CircuitBreakerRecovered(
+                self.name,
             )
         )
 
@@ -161,6 +169,8 @@ class ClosedState(State):
 
     def handle_end_request(self, context: CircuitBreaker):
         """Reset in case the request is ok"""
+        if self.failure_count >= 0:
+            context.recover_failure()
         self.failure_count = 0
 
 
