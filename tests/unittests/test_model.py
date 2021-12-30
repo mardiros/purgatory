@@ -158,3 +158,46 @@ def test_circuitbreaker_can_exclude_exception():
 
     assert circuitbreaker.messages == [CircuitBreakerRecovered(name="my")]
     assert circuitbreaker.failure_count == 0
+
+
+@pytest.mark.asyncio
+def test_circuitbreaker_can_exclude_function():
+    class HTTPError(Exception):
+        def __init__(self, status_code) -> None:
+            super().__init__(f"{status_code} Error")
+            self.status_code = status_code
+
+    circuitbreaker = CircuitBreaker(
+        "my",
+        threshold=5,
+        ttl=1,
+        exclude=[(HTTPError, lambda exc: exc.status_code < 500)],
+    )
+    try:
+        with circuitbreaker:
+            raise HTTPError(503)
+    except HTTPError:
+        pass
+
+    assert circuitbreaker.messages == [CircuitBreakerFailed(name="my", failure_count=1)]
+    assert circuitbreaker.failure_count == 1
+    circuitbreaker.messages.clear()
+
+    try:
+        with circuitbreaker:
+            raise HTTPError(404)
+    except HTTPError:
+        pass
+
+    assert circuitbreaker.messages == [CircuitBreakerRecovered(name="my")]
+    assert circuitbreaker.failure_count == 0
+    circuitbreaker.messages.clear()
+
+    try:
+        with circuitbreaker:
+            raise RuntimeError("Boom")
+    except RuntimeError:
+        pass
+
+    assert circuitbreaker.messages == [CircuitBreakerFailed(name="my", failure_count=1)]
+    assert circuitbreaker.failure_count == 1

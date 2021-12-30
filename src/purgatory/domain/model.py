@@ -7,7 +7,7 @@ import abc
 import time
 from dataclasses import dataclass
 from types import TracebackType
-from typing import List, Optional, Type
+from typing import Callable, List, Optional, Tuple, Type, Union, cast
 
 from purgatory.domain.messages.base import Event
 from purgatory.domain.messages.events import (
@@ -18,12 +18,22 @@ from purgatory.domain.messages.events import (
 from purgatory.typing import CircuitBreakerName, StateName
 
 
+ExcludeExcType = Type[BaseException]
+ExcludeTypeFunc = Tuple[ExcludeExcType, Callable[..., bool]]
+ExcludeType = List[
+    Union[
+        ExcludeExcType,
+        ExcludeTypeFunc,
+    ]
+]
+
+
 class CircuitBreaker:
     name: CircuitBreakerName
     threshold: int
     ttl: float
     messages: List[Event]
-    exclude_list: List[Type[Exception]]
+    exclude_list: ExcludeType
 
     def __init__(
         self,
@@ -33,7 +43,7 @@ class CircuitBreaker:
         state="closed",
         failure_count: int = 0,
         opened_at: Optional[float] = None,
-        exclude: Optional[List[Type[Exception]]] = None,
+        exclude: ExcludeType = None,
     ) -> None:
         self.name = name
         self.ttl = ttl
@@ -91,9 +101,15 @@ class CircuitBreaker:
 
     def handle_exception(self, exc: BaseException):
         failed = True
-        for exctype in self.exclude_list:
+        for exctype_func in self.exclude_list:
+
+            if isinstance(exctype_func, tuple):
+                exctype, func = cast(ExcludeTypeFunc, exctype_func)
+            else:
+                exctype, func = cast(ExcludeExcType, exctype_func), lambda exc: True
+
             if isinstance(exc, exctype):
-                failed = False
+                failed = not func(exc)
                 break
         if failed:
             self._state.handle_exception(self, exc)
