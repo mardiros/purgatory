@@ -138,8 +138,7 @@ async def test_messagebus_cannot_unregister_non_unregistered_handler(messagebus)
         messagebus.remove_listener(DummyEvent, listen_event)
 
     assert (
-        str(ctx.value)
-        == "<class 'tests.unittests.test_messagebus.DummyEvent'> event "
+        str(ctx.value) == "<class 'tests.unittests.test_messagebus.DummyEvent'> event "
         "has not been registered"
     )
 

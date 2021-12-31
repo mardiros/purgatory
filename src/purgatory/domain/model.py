@@ -239,7 +239,6 @@ class HalfOpenedState(State):
 
     def handle_new_request(self, context: CircuitBreaker):
         """In half open state, we reset the failure counter to restart 0."""
-        context.recover_failure()
 
     def handle_exception(self, context: CircuitBreaker, exc: BaseException):
         """If an exception happens, then the circuit is reopen directly."""
@@ -248,4 +247,5 @@ class HalfOpenedState(State):
 
     def handle_end_request(self, context: CircuitBreaker):
         """Otherwise, the circuit is closed, back to normal."""
+        context.recover_failure()
         context.set_state(ClosedState())

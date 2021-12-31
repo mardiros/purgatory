@@ -5,6 +5,13 @@ from .base import Event
 
 
 @dataclass(frozen=True)
+class CircuitBreakerCreated(Event):
+    name: str
+    threshold: int
+    ttl: float
+
+
+@dataclass(frozen=True)
 class CircuitBreakerStateChanged(Event):
     name: str
     state: str
