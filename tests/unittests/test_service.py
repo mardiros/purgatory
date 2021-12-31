@@ -8,9 +8,9 @@ from purgatory.domain.messages.events import (
     CircuitBreakerCreated,
     CircuitBreakerFailed,
     CircuitBreakerRecovered,
-    CircuitBreakerStateChanged,
+    ContextChanged,
 )
-from purgatory.domain.model import CircuitBreaker
+from purgatory.domain.model import Context
 from purgatory.domain.repository import InMemoryRepository
 from purgatory.service.circuitbreaker import CircuitBreakerFactory
 from tests.unittests.conftest import FakeRedis
@@ -35,7 +35,7 @@ async def test_circuitbreaker_factory_decorator(circuitbreaker: CircuitBreakerFa
         await fail_or_success(fail=True)
 
     brk = await circuitbreaker.uow.circuit_breakers.get("client")
-    assert brk == CircuitBreaker(name="client", threshold=5, ttl=30)
+    assert brk == Context(name="client", threshold=5, ttl=30)
     # assert circuitbreaker.breakers["client"]._state._state.failure_count == 1
 
     @circuitbreaker(circuit="client2", threshold=15)
@@ -44,7 +44,7 @@ async def test_circuitbreaker_factory_decorator(circuitbreaker: CircuitBreakerFa
 
     await _success2()
     brk = await circuitbreaker.uow.circuit_breakers.get("client2")
-    assert brk == CircuitBreaker(name="client2", threshold=15, ttl=30)
+    assert brk == Context(name="client2", threshold=15, ttl=30)
 
     @circuitbreaker(circuit="client3", ttl=60)
     async def _success3():
@@ -52,7 +52,7 @@ async def test_circuitbreaker_factory_decorator(circuitbreaker: CircuitBreakerFa
 
     await _success3()
     brk = await circuitbreaker.uow.circuit_breakers.get("client3")
-    assert brk == CircuitBreaker(name="client3", threshold=5, ttl=60)
+    assert brk == Context(name="client3", threshold=5, ttl=60)
 
 
 @pytest.mark.asyncio
@@ -115,18 +115,18 @@ async def test_circuitbreaker_factory_get_breaker(
     await cbreaker.initialize()
 
     breaker = await cbreaker.get_breaker(*cbr[0])
-    assert breaker.brk.name == cbr[1][0]
-    assert breaker.brk.threshold == cbr[1][1]
-    assert breaker.brk.ttl == cbr[1][2]
-    assert breaker.brk.exclude_list == cbr[1][3]
+    assert breaker.context.name == cbr[1][0]
+    assert breaker.context.threshold == cbr[1][1]
+    assert breaker.context.ttl == cbr[1][2]
+    assert breaker.context.exclude_list == cbr[1][3]
 
 
 @pytest.mark.parametrize("state", ["closed", "opened", "half-opened"])
 def test_circuitbreaker_repr(state):
-    circuitbreaker = CircuitBreaker("plop", 5, 30, state)
+    circuitbreaker = Context("plop", 5, 30, state)
     assert (
         repr(circuitbreaker)
-        == f'<CircuitBreaker name="plop" state="{state}" threshold="5" ttl="30">'
+        == f'<Context name="plop" state="{state}" threshold="5" ttl="30">'
     )
 
 
@@ -145,10 +145,10 @@ async def test_circuitbreaker_factory_context(circuitbreaker):
         count += 1
 
     assert count == 3
-    assert (await circuitbreaker.get_breaker("my")).brk.messages == []
+    assert (await circuitbreaker.get_breaker("my")).context.messages == []
     assert cast(InMemoryRepository, circuitbreaker.uow.circuit_breakers).breakers == {
-        "my": CircuitBreaker(name="my", threshold=5, ttl=30),
-        "my2": CircuitBreaker(name="my2", threshold=42, ttl=42),
+        "my": Context(name="my", threshold=5, ttl=30),
+        "my2": Context(name="my2", threshold=42, ttl=42),
     }
 
 
@@ -162,15 +162,15 @@ async def test_circuitbreaker_factory_context_exclude_exceptions_with_context(
             raise ValueError(42)
     except ValueError:
         pass
-    assert cbr.brk._state.failure_count == 0
-    assert cbr.brk.state == "closed"
+    assert cbr.context._state.failure_count == 0
+    assert cbr.context.state == "closed"
 
     try:
         async with await circuitbreaker.get_breaker("my", exclude=[RuntimeError]):
             raise ValueError(42)
     except ValueError:
         pass
-    assert cbr.brk.state == "opened"
+    assert cbr.context.state == "opened"
 
 
 @pytest.mark.asyncio
@@ -188,15 +188,15 @@ async def test_circuitbreaker_factory_context_exclude_exceptions_with_decorator(
     except ValueError:
         pass
 
-    assert (await circuitbreaker.get_breaker("my")).brk.state == "closed"
-    assert (await circuitbreaker.get_breaker("my")).brk._state.failure_count == 0
+    assert (await circuitbreaker.get_breaker("my")).context.state == "closed"
+    assert (await circuitbreaker.get_breaker("my")).context._state.failure_count == 0
 
     try:
         await raise_error("runtime")
     except RuntimeError:
         pass
 
-    assert (await circuitbreaker.get_breaker("my")).brk.state == "opened"
+    assert (await circuitbreaker.get_breaker("my")).context.state == "opened"
 
 
 @pytest.mark.asyncio
@@ -204,10 +204,10 @@ async def test_circuitbreaker_raise_state_changed_event(circuitbreaker):
 
     evts = []
 
-    async def evt_handler(cmd: CircuitBreakerStateChanged, uow):
+    async def evt_handler(cmd: ContextChanged, uow):
         evts.append(asdict(cmd))
 
-    circuitbreaker.messagebus.add_listener(CircuitBreakerStateChanged, evt_handler)
+    circuitbreaker.messagebus.add_listener(ContextChanged, evt_handler)
     brk = await circuitbreaker.get_breaker("my", threshold=2)
     try:
         async with brk:
@@ -248,23 +248,23 @@ async def test_circuit_breaker_factory_global_exclude():
     except ValueError:
         pass
 
-    assert (await circuitbreaker.get_breaker("my")).brk.state == "closed"
-    assert (await circuitbreaker.get_breaker("my")).brk._state.failure_count == 0
+    assert (await circuitbreaker.get_breaker("my")).context.state == "closed"
+    assert (await circuitbreaker.get_breaker("my")).context._state.failure_count == 0
 
     try:
         await raise_error("key")
     except KeyError:
         pass
 
-    assert (await circuitbreaker.get_breaker("my")).brk.state == "closed"
-    assert (await circuitbreaker.get_breaker("my")).brk._state.failure_count == 0
+    assert (await circuitbreaker.get_breaker("my")).context.state == "closed"
+    assert (await circuitbreaker.get_breaker("my")).context._state.failure_count == 0
 
     try:
         await raise_error("runtime")
     except RuntimeError:
         pass
 
-    assert (await circuitbreaker.get_breaker("my")).brk.state == "opened"
+    assert (await circuitbreaker.get_breaker("my")).context.state == "opened"
 
 
 @pytest.mark.asyncio
@@ -309,8 +309,8 @@ async def test_circuitbreaker_factory_add_listener():
         (
             "my",
             "state_changed",
-            CircuitBreakerStateChanged(
-                name="my", state="opened", opened_at=brk.brk._state.opened_at
+            ContextChanged(
+                name="my", state="opened", opened_at=brk.context._state.opened_at
             ),
         ),
     ]
@@ -322,13 +322,13 @@ async def test_circuitbreaker_factory_add_listener():
         (
             "my",
             "state_changed",
-            CircuitBreakerStateChanged(name="my", state="half-opened", opened_at=None),
+            ContextChanged(name="my", state="half-opened", opened_at=None),
         ),
         (
             "my",
             "state_changed",
-            CircuitBreakerStateChanged(
-                name="my", state="opened", opened_at=brk.brk._state.opened_at
+            ContextChanged(
+                name="my", state="opened", opened_at=brk.context._state.opened_at
             ),
         ),
     ]
@@ -342,13 +342,13 @@ async def test_circuitbreaker_factory_add_listener():
         (
             "my",
             "state_changed",
-            CircuitBreakerStateChanged(name="my", state="half-opened", opened_at=None),
+            ContextChanged(name="my", state="half-opened", opened_at=None),
         ),
         ("my", "recovered", CircuitBreakerRecovered(name="my")),
         (
             "my",
             "state_changed",
-            CircuitBreakerStateChanged(name="my", state="closed", opened_at=None),
+            ContextChanged(name="my", state="closed", opened_at=None),
         ),
     ]
 

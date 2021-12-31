@@ -12,7 +12,7 @@ class CircuitBreakerCreated(Event):
 
 
 @dataclass(frozen=True)
-class CircuitBreakerStateChanged(Event):
+class ContextChanged(Event):
     name: str
     state: str
     opened_at: Optional[float]

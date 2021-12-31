@@ -3,7 +3,7 @@ import json
 from typing import List, Optional
 
 from purgatory.domain.messages.base import Message
-from purgatory.domain.model import CircuitBreaker
+from purgatory.domain.model import Context
 from purgatory.typing import CircuitBreakerName
 
 
@@ -19,11 +19,11 @@ class AbstractRepository(abc.ABC):
         """Override to initialize the repository asynchronously"""
 
     @abc.abstractmethod
-    async def get(self, name: CircuitBreakerName) -> Optional[CircuitBreaker]:
+    async def get(self, name: CircuitBreakerName) -> Optional[Context]:
         """Load breakers from the repository."""
 
     @abc.abstractmethod
-    async def register(self, model: CircuitBreaker):
+    async def register(self, context: Context):
         """Add a circuit breaker into the repository."""
 
     @abc.abstractmethod
@@ -49,13 +49,13 @@ class InMemoryRepository(AbstractRepository):
         self.breakers = {}
         self.messages = []
 
-    async def get(self, name: CircuitBreakerName) -> Optional[CircuitBreaker]:
+    async def get(self, name: CircuitBreakerName) -> Optional[Context]:
         """Add a circuit breaker into the repository."""
         return self.breakers.get(name)
 
-    async def register(self, model: CircuitBreaker):
+    async def register(self, context: Context):
         """Add a circuit breaker into the repository."""
-        self.breakers[model.name] = model
+        self.breakers[context.name] = context
 
     async def update_state(
         self,
@@ -85,7 +85,7 @@ class RedisRepository(AbstractRepository):
     async def initialize(self):
         await self.redis.initialize()
 
-    async def get(self, name: CircuitBreakerName) -> Optional[CircuitBreaker]:
+    async def get(self, name: CircuitBreakerName) -> Optional[Context]:
         """Add a circuit breaker into the repository."""
         data = await self.redis.get(f"{self.prefix}{name}")
         if not data:
@@ -94,21 +94,21 @@ class RedisRepository(AbstractRepository):
         failure_count = await self.redis.get(f"{self.prefix}{name}::failure_count")
         if failure_count:
             breaker["failure_count"] = int(failure_count)
-        cbreaker = CircuitBreaker(**breaker)
+        cbreaker = Context(**breaker)
         return cbreaker
 
-    async def register(self, model: CircuitBreaker):
+    async def register(self, context: Context):
         """Add a circuit breaker into the repository."""
         data = json.dumps(
             {
-                "name": model.name,
-                "threshold": model.threshold,
-                "ttl": model.ttl,
-                "state": model.state,
-                "opened_at": model.opened_at,
+                "name": context.name,
+                "threshold": context.threshold,
+                "ttl": context.ttl,
+                "state": context.state,
+                "opened_at": context.opened_at,
             }
         )
-        await self.redis.set(f"{self.prefix}{model.name}", data)
+        await self.redis.set(f"{self.prefix}{context.name}", data)
 
     async def update_state(
         self,

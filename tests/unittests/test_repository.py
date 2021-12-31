@@ -2,7 +2,7 @@ import time
 
 import pytest
 
-from purgatory.domain.model import CircuitBreaker
+from purgatory.domain.model import Context
 from purgatory.domain.repository import InMemoryRepository, RedisRepository
 
 
@@ -18,11 +18,11 @@ async def test_redis_respository_state_recovery(
     repository = {"inmemory": inmemory_repository, "redis": redis_repository}[
         repository
     ]
-    breaker = CircuitBreaker("foo", 40, 10, state)
+    context = Context("foo", 40, 10, state)
     await repository.initialize()
-    await repository.register(breaker)
-    breaker2 = await repository.get("foo")
-    assert breaker2 == breaker
+    await repository.register(context)
+    context2 = await repository.get("foo")
+    assert context2 == context
 
 
 @pytest.mark.parametrize("repository", ["redis"])
@@ -36,7 +36,7 @@ async def test_redis_respository_workflow(
 ):
     repository = {"redis": redis_repository}[repository]
 
-    breaker = CircuitBreaker("foo", 40, 10)
+    breaker = Context("foo", 40, 10)
     await repository.initialize()
     await repository.register(breaker)
 

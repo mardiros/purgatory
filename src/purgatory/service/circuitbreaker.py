@@ -8,9 +8,9 @@ from purgatory.domain.messages.events import (
     CircuitBreakerCreated,
     CircuitBreakerFailed,
     CircuitBreakerRecovered,
-    CircuitBreakerStateChanged,
+    ContextChanged,
 )
-from purgatory.domain.model import CircuitBreaker, ExcludeType
+from purgatory.domain.model import Context, ExcludeType
 from purgatory.service.handlers import register_circuit_breaker
 from purgatory.service.handlers.circuitbreaker import (
     inc_circuit_breaker_failure,
@@ -23,14 +23,14 @@ from purgatory.service.unit_of_work import AbstractUnitOfWork, InMemoryUnitOfWor
 
 class CircuitBreakerService:
     def __init__(
-        self, brk: CircuitBreaker, uow: AbstractUnitOfWork, messagebus: MessageRegistry
+        self, context: Context, uow: AbstractUnitOfWork, messagebus: MessageRegistry
     ) -> None:
-        self.brk = brk
+        self.context = context
         self.uow = uow
         self.messagebus = messagebus
 
     async def __aenter__(self) -> "CircuitBreakerService":
-        self.brk.__enter__()
+        self.context.__enter__()
         return self
 
     async def __aexit__(
@@ -39,10 +39,10 @@ class CircuitBreakerService:
         exc: Optional[BaseException],
         tb: Optional[TracebackType],
     ) -> None:
-        self.brk.__exit__(exc_type, exc, tb)
-        while self.brk.messages:
+        self.context.__exit__(exc_type, exc, tb)
+        while self.context.messages:
             await self.messagebus.handle(
-                self.brk.messages.pop(0),
+                self.context.messages.pop(0),
                 self.uow,
             )
 
@@ -52,14 +52,14 @@ class PublicEvent:
         self, messagebus: MessageRegistry, hook: Callable[[str, str, Event], None]
     ) -> None:
         messagebus.add_listener(CircuitBreakerCreated, self.cb_created)
-        messagebus.add_listener(CircuitBreakerStateChanged, self.cb_state_changed)
+        messagebus.add_listener(ContextChanged, self.cb_state_changed)
         messagebus.add_listener(CircuitBreakerFailed, self.cb_failed)
         messagebus.add_listener(CircuitBreakerRecovered, self.cb_recovered)
         self.hook = hook
 
     def remove_listeners(self, messagebus: MessageRegistry) -> None:
         messagebus.remove_listener(CircuitBreakerCreated, self.cb_created)
-        messagebus.remove_listener(CircuitBreakerStateChanged, self.cb_state_changed)
+        messagebus.remove_listener(ContextChanged, self.cb_state_changed)
         messagebus.remove_listener(CircuitBreakerFailed, self.cb_failed)
         messagebus.remove_listener(CircuitBreakerRecovered, self.cb_recovered)
 
@@ -93,7 +93,7 @@ class CircuitBreakerFactory:
         self.messagebus = MessageRegistry()
         self.messagebus.add_listener(CreateCircuitBreaker, register_circuit_breaker)
         self.messagebus.add_listener(
-            CircuitBreakerStateChanged, save_circuit_breaker_state
+            ContextChanged, save_circuit_breaker_state
         )
         self.messagebus.add_listener(CircuitBreakerFailed, inc_circuit_breaker_failure)
         self.messagebus.add_listener(CircuitBreakerRecovered, reset_failure)

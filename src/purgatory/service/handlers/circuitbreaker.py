@@ -3,16 +3,16 @@ from purgatory.domain.messages.events import (
     CircuitBreakerCreated,
     CircuitBreakerFailed,
     CircuitBreakerRecovered,
-    CircuitBreakerStateChanged,
+    ContextChanged,
 )
-from purgatory.domain.model import CircuitBreaker
+from purgatory.domain.model import Context
 from purgatory.service.unit_of_work import AbstractUnitOfWork
 
 
 async def register_circuit_breaker(
     cmd: CreateCircuitBreaker, uow: AbstractUnitOfWork
-) -> CircuitBreaker:
-    ret = CircuitBreaker(cmd.name, cmd.threshold, cmd.ttl)
+) -> Context:
+    ret = Context(cmd.name, cmd.threshold, cmd.ttl)
     await uow.circuit_breakers.register(ret)
     uow.circuit_breakers.messages.append(
         CircuitBreakerCreated(cmd.name, cmd.threshold, cmd.ttl)
@@ -21,7 +21,7 @@ async def register_circuit_breaker(
 
 
 async def save_circuit_breaker_state(
-    evt: CircuitBreakerStateChanged, uow: AbstractUnitOfWork
+    evt: ContextChanged, uow: AbstractUnitOfWork
 ) -> None:
     await uow.circuit_breakers.update_state(evt.name, evt.state, evt.opened_at)
 
