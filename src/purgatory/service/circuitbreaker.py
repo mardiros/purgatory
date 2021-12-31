@@ -21,7 +21,7 @@ from purgatory.service.messagebus import MessageRegistry
 from purgatory.service.unit_of_work import AbstractUnitOfWork, InMemoryUnitOfWork
 
 
-class CircuitBreakerService:
+class CircuitBreaker:
     def __init__(
         self, context: Context, uow: AbstractUnitOfWork, messagebus: MessageRegistry
     ) -> None:
@@ -29,7 +29,7 @@ class CircuitBreakerService:
         self.uow = uow
         self.messagebus = messagebus
 
-    async def __aenter__(self) -> "CircuitBreakerService":
+    async def __aenter__(self) -> "CircuitBreaker":
         self.context.__enter__()
         return self
 
@@ -114,7 +114,7 @@ class CircuitBreakerFactory:
 
     async def get_breaker(
         self, circuit: str, threshold=None, ttl=None, exclude: ExcludeType = None
-    ) -> CircuitBreakerService:
+    ) -> CircuitBreaker:
         async with self.uow as uow:
             brk = await uow.circuit_breakers.get(circuit)
         if brk is None:
@@ -126,7 +126,7 @@ class CircuitBreakerFactory:
                     self.uow,
                 )
         brk.exclude_list = (exclude or []) + self.global_exclude
-        return CircuitBreakerService(brk, self.uow, self.messagebus)
+        return CircuitBreaker(brk, self.uow, self.messagebus)
 
     def __call__(
         self, circuit: str, threshold=None, ttl=None, exclude: ExcludeType = None
