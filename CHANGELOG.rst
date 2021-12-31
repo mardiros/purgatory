@@ -1,3 +1,7 @@
+0.4.0 (2021-12-31)
+------------------
+* Add a way to monitor circuit breakers.
+
 0.3.0 (2021-12-30)
 ------------------
 * Add an exclude parameter to ignore exception.
