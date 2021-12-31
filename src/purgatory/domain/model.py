@@ -17,7 +17,6 @@ from purgatory.domain.messages.events import (
 )
 from purgatory.typing import CircuitBreakerName, StateName
 
-
 ExcludeExcType = Type[BaseException]
 ExcludeTypeFunc = Tuple[ExcludeExcType, Callable[..., bool]]
 ExcludeType = List[

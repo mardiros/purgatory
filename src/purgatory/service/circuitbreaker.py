@@ -1,8 +1,8 @@
 from functools import wraps
 from types import TracebackType
-from typing import Any, Callable, Dict, Optional, Tuple, Type
-from purgatory.domain.messages.base import Event
+from typing import Any, Callable, Dict, Optional, Type
 
+from purgatory.domain.messages.base import Event
 from purgatory.domain.messages.commands import CreateCircuitBreaker
 from purgatory.domain.messages.events import (
     CircuitBreakerCreated,
@@ -48,7 +48,9 @@ class CircuitBreakerService:
 
 
 class PublicEvent:
-    def __init__(self, messagebus: MessageRegistry, hook: Callable[[str, str, Event], None]) -> None:
+    def __init__(
+        self, messagebus: MessageRegistry, hook: Callable[[str, str, Event], None]
+    ) -> None:
         messagebus.add_listener(CircuitBreakerCreated, self.cb_created)
         messagebus.add_listener(CircuitBreakerStateChanged, self.cb_state_changed)
         messagebus.add_listener(CircuitBreakerFailed, self.cb_failed)

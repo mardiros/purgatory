@@ -1,5 +1,6 @@
-import pytest
 import time
+
+import pytest
 
 from purgatory.domain.model import CircuitBreaker
 from purgatory.domain.repository import InMemoryRepository, RedisRepository

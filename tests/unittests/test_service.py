@@ -374,7 +374,7 @@ async def test_circuitbreaker_factory_remove_listener():
     assert str(ctx.value) == f"<hook> is not listening {circuitbreaker}"
 
     circuitbreaker.add_listener(hook)
-    brk = await circuitbreaker.get_breaker("my")
+    await circuitbreaker.get_breaker("my")
     assert evts == [
         (
             "my",
