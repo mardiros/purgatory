@@ -351,3 +351,43 @@ async def test_circuitbreaker_factory_add_listener():
             CircuitBreakerStateChanged(name="my", state="closed", opened_at=None),
         ),
     ]
+
+
+@pytest.mark.asyncio
+async def test_circuitbreaker_factory_remove_listener():
+
+    evts = []
+
+    class Hook:
+        def __call__(self, name, evt_name, evt):
+            evts.append((name, evt_name, evt))
+
+        def __repr__(self):
+            return "<hook>"
+
+    hook = Hook()
+    hook2 = Hook()
+
+    circuitbreaker = CircuitBreakerFactory(default_threshold=2, default_ttl=0.1)
+    with pytest.raises(RuntimeError) as ctx:
+        circuitbreaker.remove_listener(hook)
+    assert str(ctx.value) == f"<hook> is not listening {circuitbreaker}"
+
+    circuitbreaker.add_listener(hook)
+    brk = await circuitbreaker.get_breaker("my")
+    assert evts == [
+        (
+            "my",
+            "circuit_breaker_created",
+            CircuitBreakerCreated(name="my", threshold=2, ttl=0.1),
+        ),
+    ]
+    evts.clear()
+    circuitbreaker.add_listener(hook2)
+    assert len(circuitbreaker.listeners) == 2
+    circuitbreaker.remove_listener(hook)
+    assert len(circuitbreaker.listeners) == 1
+    circuitbreaker.remove_listener(hook2)
+    await circuitbreaker.get_breaker("my2")
+    assert evts == []
+    assert circuitbreaker.listeners == {}

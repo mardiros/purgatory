@@ -1,6 +1,7 @@
 from functools import wraps
 from types import TracebackType
-from typing import Any, Callable, Dict, Optional, Type
+from typing import Any, Callable, Dict, Optional, Tuple, Type
+from purgatory.domain.messages.base import Event
 
 from purgatory.domain.messages.commands import CreateCircuitBreaker
 from purgatory.domain.messages.events import (
@@ -47,12 +48,18 @@ class CircuitBreakerService:
 
 
 class PublicEvent:
-    def __init__(self, messagebus, hook) -> None:
+    def __init__(self, messagebus: MessageRegistry, hook: Callable[[str, str, Event], None]) -> None:
         messagebus.add_listener(CircuitBreakerCreated, self.cb_created)
         messagebus.add_listener(CircuitBreakerStateChanged, self.cb_state_changed)
         messagebus.add_listener(CircuitBreakerFailed, self.cb_failed)
         messagebus.add_listener(CircuitBreakerRecovered, self.cb_recovered)
         self.hook = hook
+
+    def remove_listeners(self, messagebus: MessageRegistry) -> None:
+        messagebus.remove_listener(CircuitBreakerCreated, self.cb_created)
+        messagebus.remove_listener(CircuitBreakerStateChanged, self.cb_state_changed)
+        messagebus.remove_listener(CircuitBreakerFailed, self.cb_failed)
+        messagebus.remove_listener(CircuitBreakerRecovered, self.cb_recovered)
 
     async def cb_created(self, event: CircuitBreakerCreated, uow: AbstractUnitOfWork):
         self.hook(event.name, "circuit_breaker_created", event)
@@ -95,6 +102,13 @@ class CircuitBreakerFactory:
 
     def add_listener(self, listener):
         self.listeners[listener] = PublicEvent(self.messagebus, listener)
+
+    def remove_listener(self, listener):
+        try:
+            self.listeners[listener].remove_listeners(self.messagebus)
+            del self.listeners[listener]
+        except KeyError:
+            raise RuntimeError(f"{listener} is not listening {self}")
 
     async def get_breaker(
         self, circuit: str, threshold=None, ttl=None, exclude: ExcludeType = None
