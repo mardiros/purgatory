@@ -1,9 +1,15 @@
+import asyncio
 from dataclasses import asdict
 from typing import cast
 
 import pytest
 
-from purgatory.domain.messages.events import CircuitBreakerStateChanged
+from purgatory.domain.messages.events import (
+    CircuitBreakerCreated,
+    CircuitBreakerFailed,
+    CircuitBreakerRecovered,
+    CircuitBreakerStateChanged,
+)
 from purgatory.domain.model import CircuitBreaker
 from purgatory.domain.repository import InMemoryRepository
 from purgatory.service.circuitbreaker import CircuitBreakerFactory
@@ -99,7 +105,7 @@ async def test_redis_circuitbreaker_factory_decorator(
     ],
 )
 @pytest.mark.asyncio
-async def test_get_breaker(
+async def test_circuitbreaker_factory_get_breaker(
     uow,
     cbr,
     circuitbreaker: CircuitBreakerFactory,
@@ -259,3 +265,129 @@ async def test_circuit_breaker_factory_global_exclude():
         pass
 
     assert (await circuitbreaker.get_breaker("my")).brk.state == "opened"
+
+
+@pytest.mark.asyncio
+async def test_circuitbreaker_factory_add_listener():
+
+    evts = []
+
+    def hook(name, evt_name, evt):
+        evts.append((name, evt_name, evt))
+
+    circuitbreaker = CircuitBreakerFactory(default_threshold=2, default_ttl=0.1)
+    circuitbreaker.add_listener(hook)
+
+    brk = await circuitbreaker.get_breaker("my")
+    brk2 = await circuitbreaker.get_breaker("my2")
+
+    async def boom():
+        try:
+            async with brk:
+                raise RuntimeError("Boom")
+        except RuntimeError:
+            pass
+
+    await boom()
+    async with brk2:
+        pass
+
+    await boom()
+
+    assert evts == [
+        (
+            "my",
+            "circuit_breaker_created",
+            CircuitBreakerCreated(name="my", threshold=2, ttl=0.1),
+        ),
+        (
+            "my2",
+            "circuit_breaker_created",
+            CircuitBreakerCreated(name="my2", threshold=2, ttl=0.1),
+        ),
+        ("my", "failed", CircuitBreakerFailed(name="my", failure_count=1)),
+        (
+            "my",
+            "state_changed",
+            CircuitBreakerStateChanged(
+                name="my", state="opened", opened_at=brk.brk._state.opened_at
+            ),
+        ),
+    ]
+
+    evts.clear()
+    await asyncio.sleep(0.11)
+    await boom()
+    assert evts == [
+        (
+            "my",
+            "state_changed",
+            CircuitBreakerStateChanged(name="my", state="half-opened", opened_at=None),
+        ),
+        (
+            "my",
+            "state_changed",
+            CircuitBreakerStateChanged(
+                name="my", state="opened", opened_at=brk.brk._state.opened_at
+            ),
+        ),
+    ]
+    evts.clear()
+
+    await asyncio.sleep(0.11)
+    async with brk:
+        pass
+
+    assert evts == [
+        (
+            "my",
+            "state_changed",
+            CircuitBreakerStateChanged(name="my", state="half-opened", opened_at=None),
+        ),
+        ("my", "recovered", CircuitBreakerRecovered(name="my")),
+        (
+            "my",
+            "state_changed",
+            CircuitBreakerStateChanged(name="my", state="closed", opened_at=None),
+        ),
+    ]
+
+
+@pytest.mark.asyncio
+async def test_circuitbreaker_factory_remove_listener():
+
+    evts = []
+
+    class Hook:
+        def __call__(self, name, evt_name, evt):
+            evts.append((name, evt_name, evt))
+
+        def __repr__(self):
+            return "<hook>"
+
+    hook = Hook()
+    hook2 = Hook()
+
+    circuitbreaker = CircuitBreakerFactory(default_threshold=2, default_ttl=0.1)
+    with pytest.raises(RuntimeError) as ctx:
+        circuitbreaker.remove_listener(hook)
+    assert str(ctx.value) == f"<hook> is not listening {circuitbreaker}"
+
+    circuitbreaker.add_listener(hook)
+    brk = await circuitbreaker.get_breaker("my")
+    assert evts == [
+        (
+            "my",
+            "circuit_breaker_created",
+            CircuitBreakerCreated(name="my", threshold=2, ttl=0.1),
+        ),
+    ]
+    evts.clear()
+    circuitbreaker.add_listener(hook2)
+    assert len(circuitbreaker.listeners) == 2
+    circuitbreaker.remove_listener(hook)
+    assert len(circuitbreaker.listeners) == 1
+    circuitbreaker.remove_listener(hook2)
+    await circuitbreaker.get_breaker("my2")
+    assert evts == []
+    assert circuitbreaker.listeners == {}
