@@ -13,9 +13,9 @@ from purgatory.domain.messages.base import Event
 from purgatory.domain.messages.events import (
     CircuitBreakerFailed,
     CircuitBreakerRecovered,
-    CircuitBreakerStateChanged,
+    ContextChanged,
 )
-from purgatory.typing import CircuitBreakerName, StateName
+from purgatory.typing import TTL, CircuitBreakerName, StateName, Threshold
 
 ExcludeExcType = Type[BaseException]
 ExcludeTypeFunc = Tuple[ExcludeExcType, Callable[..., bool]]
@@ -26,19 +26,23 @@ ExcludeType = List[
     ]
 ]
 
+CLOSED: StateName = "closed"
+OPENED: StateName = "opened"
+HALF_OPENED: StateName = "half-opened"
 
-class CircuitBreaker:
+
+class Context:
     name: CircuitBreakerName
-    threshold: int
-    ttl: float
+    threshold: Threshold
+    ttl: TTL
     messages: List[Event]
     exclude_list: ExcludeType
 
     def __init__(
         self,
         name: CircuitBreakerName,
-        threshold: int,
-        ttl: float,
+        threshold: Threshold,
+        ttl: TTL,
         state="closed",
         failure_count: int = 0,
         opened_at: Optional[float] = None,
@@ -73,7 +77,7 @@ class CircuitBreaker:
     def set_state(self, state: "State"):
         self._state = state
         self.messages.append(
-            CircuitBreakerStateChanged(
+            ContextChanged(
                 self.name,
                 self.state,
                 state.opened_at,
@@ -118,7 +122,7 @@ class CircuitBreaker:
     def handle_end_request(self):
         self._state.handle_end_request(self)
 
-    def __enter__(self) -> "CircuitBreaker":
+    def __enter__(self) -> "Context":
         self.handle_new_request()
         return self
 
@@ -135,7 +139,7 @@ class CircuitBreaker:
 
     def __repr__(self) -> str:
         return (
-            f"<CircuitBreaker "
+            f"<Context "
             f'name="{self.name}" '
             f'state="{self.state}" '
             f'threshold="{self.threshold}" ttl="{self.ttl}">'
@@ -143,7 +147,7 @@ class CircuitBreaker:
 
     def __eq__(self, other: object) -> bool:
         return (
-            isinstance(other, CircuitBreaker)
+            isinstance(other, Context)
             and self.name == other.name
             and self.threshold == other.threshold
             and self.ttl == other.ttl
@@ -157,15 +161,15 @@ class State(abc.ABC):
     name: str = ""
 
     @abc.abstractmethod
-    def handle_new_request(self, context: CircuitBreaker):
+    def handle_new_request(self, context: Context):
         """Handle new code block"""
 
     @abc.abstractmethod
-    def handle_exception(self, context: CircuitBreaker, exc: BaseException):
+    def handle_exception(self, context: Context, exc: BaseException):
         """Handle exception during the code block"""
 
     @abc.abstractmethod
-    def handle_end_request(self, context: CircuitBreaker):
+    def handle_end_request(self, context: Context):
         """Handle proper execution after the code block"""
 
 
@@ -174,15 +178,15 @@ class ClosedState(State):
     """In closed state, track for failure."""
 
     failure_count: int
-    name: str = "closed"
+    name: StateName = CLOSED
 
     def __init__(self) -> None:
         self.failure_count = 0
 
-    def handle_new_request(self, context: CircuitBreaker):
+    def handle_new_request(self, context: Context):
         """When the circuit is closed, the new request has no incidence"""
 
-    def handle_exception(self, context: CircuitBreaker, exc: BaseException):
+    def handle_exception(self, context: Context, exc: BaseException):
         self.failure_count += 1
         if self.failure_count >= context.threshold:
             opened = OpenedState()
@@ -190,7 +194,7 @@ class ClosedState(State):
         else:
             context.mark_failure(self.failure_count)
 
-    def handle_end_request(self, context: CircuitBreaker):
+    def handle_end_request(self, context: Context):
         """Reset in case the request is ok"""
         if self.failure_count > 0:
             context.recover_failure()
@@ -201,14 +205,14 @@ class ClosedState(State):
 class OpenedState(State, Exception):
     """In open state, reopen after a TTL."""
 
-    name: str = "opened"
+    name: StateName = OPENED
     opened_at: float
 
     def __init__(self) -> None:
         Exception.__init__(self, "Circuit breaker is open")
         self.opened_at = time.time()
 
-    def handle_new_request(self, context: CircuitBreaker):
+    def handle_new_request(self, context: Context):
         closed_at = self.opened_at + context.ttl
         if time.time() > closed_at:
             context.set_state(HalfOpenedState())
@@ -234,17 +238,17 @@ class OpenedState(State, Exception):
 class HalfOpenedState(State):
     """In half open state, decide to reopen or to close."""
 
-    name: str = "half-opened"
+    name: StateName = HALF_OPENED
 
-    def handle_new_request(self, context: CircuitBreaker):
+    def handle_new_request(self, context: Context):
         """In half open state, we reset the failure counter to restart 0."""
 
-    def handle_exception(self, context: CircuitBreaker, exc: BaseException):
+    def handle_exception(self, context: Context, exc: BaseException):
         """If an exception happens, then the circuit is reopen directly."""
         opened = OpenedState()
         context.set_state(opened)
 
-    def handle_end_request(self, context: CircuitBreaker):
+    def handle_end_request(self, context: Context):
         """Otherwise, the circuit is closed, back to normal."""
         context.recover_failure()
         context.set_state(ClosedState())

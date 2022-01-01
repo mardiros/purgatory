@@ -72,7 +72,7 @@ def redis_repository(fake_redis):
 @pytest.fixture()
 def redis_uow(fake_redis):
     repo = RedisUnitOfWork("redis://localhost")
-    cast(RedisRepository, repo.circuit_breakers).redis = fake_redis
+    cast(RedisRepository, repo.contexts).redis = fake_redis
     yield repo
 
 

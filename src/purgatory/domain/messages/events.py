@@ -1,20 +1,22 @@
 from dataclasses import dataclass
 from typing import Optional
 
+from purgatory.typing import TTL, StateName, Threshold
+
 from .base import Event
 
 
 @dataclass(frozen=True)
 class CircuitBreakerCreated(Event):
     name: str
-    threshold: int
-    ttl: float
+    threshold: Threshold
+    ttl: TTL
 
 
 @dataclass(frozen=True)
-class CircuitBreakerStateChanged(Event):
+class ContextChanged(Event):
     name: str
-    state: str
+    state: StateName
     opened_at: Optional[float]
 
 

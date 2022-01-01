@@ -5,123 +5,113 @@ import pytest
 from purgatory.domain.messages.events import (
     CircuitBreakerFailed,
     CircuitBreakerRecovered,
-    CircuitBreakerStateChanged,
+    ContextChanged,
 )
-from purgatory.domain.model import CircuitBreaker, ClosedState, OpenedState
+from purgatory.domain.model import ClosedState, Context, OpenedState
 
 
 def test_circuitbreaker_open_raise():
-    circuitbreaker = CircuitBreaker("my", threshold=2, ttl=42)
-    circuitbreaker.set_state(OpenedState())
+    context = Context("my", threshold=2, ttl=42)
+    context.set_state(OpenedState())
     count = 0
     with pytest.raises(OpenedState):
-        with circuitbreaker:
+        with context:
             count += 1
     assert count == 0
-    assert circuitbreaker.messages == [
-        CircuitBreakerStateChanged(
-            name="my", state="opened", opened_at=circuitbreaker.opened_at
-        ),
+    assert context.messages == [
+        ContextChanged(name="my", state="opened", opened_at=context.opened_at),
     ]
 
 
 @pytest.mark.asyncio
 async def test_circuitbreaker_open_closed_after_ttl_passed():
-    circuitbreaker = CircuitBreaker("my", threshold=5, ttl=0.1)
+    context = Context("my", threshold=5, ttl=0.1)
     state = OpenedState()
-    circuitbreaker.set_state(state)
-    assert circuitbreaker.messages == [
-        CircuitBreakerStateChanged(
-            name="my", state="opened", opened_at=state.opened_at
-        ),
+    context.set_state(state)
+    assert context.messages == [
+        ContextChanged(name="my", state="opened", opened_at=state.opened_at),
     ]
-    circuitbreaker.messages.clear()
+    context.messages.clear()
     await asyncio.sleep(0.1)
 
     count = 0
-    with circuitbreaker:
+    with context:
         count += 1
     assert count == 1
-    assert circuitbreaker.messages == [
-        CircuitBreakerStateChanged(name="my", state="half-opened", opened_at=None),
+    assert context.messages == [
+        ContextChanged(name="my", state="half-opened", opened_at=None),
         CircuitBreakerRecovered(name="my"),
-        CircuitBreakerStateChanged(name="my", state="closed", opened_at=None),
+        ContextChanged(name="my", state="closed", opened_at=None),
     ]
-    assert circuitbreaker._state == ClosedState()
+    assert context._state == ClosedState()
 
 
 @pytest.mark.asyncio
 async def test_circuitbreaker_open_reopened_after_ttl_passed():
-    circuitbreaker = CircuitBreaker("my", threshold=5, ttl=0.1)
+    context = Context("my", threshold=5, ttl=0.1)
     state = OpenedState()
-    circuitbreaker.set_state(state)
+    context.set_state(state)
     await asyncio.sleep(0.1)
 
     try:
-        with circuitbreaker:
+        with context:
             raise RuntimeError("Boom")
     except RuntimeError:
         pass
-    assert circuitbreaker.messages == [
-        CircuitBreakerStateChanged(
-            name="my", state="opened", opened_at=state.opened_at
-        ),
-        CircuitBreakerStateChanged(name="my", state="half-opened", opened_at=None),
-        CircuitBreakerStateChanged(
-            name="my", state="opened", opened_at=circuitbreaker.opened_at
-        ),
+    assert context.messages == [
+        ContextChanged(name="my", state="opened", opened_at=state.opened_at),
+        ContextChanged(name="my", state="half-opened", opened_at=None),
+        ContextChanged(name="my", state="opened", opened_at=context.opened_at),
     ]
     state = OpenedState()
-    state.opened_at = circuitbreaker.opened_at or 0
-    assert circuitbreaker._state == state
+    state.opened_at = context.opened_at or 0
+    assert context._state == state
 
 
 def test_circuitbreaker_closed_state_opening():
-    circuitbreaker = CircuitBreaker("my", threshold=2, ttl=1)
+    context = Context("my", threshold=2, ttl=1)
     try:
-        with circuitbreaker:
+        with context:
             raise RuntimeError("Boom")
     except RuntimeError:
         pass
-    assert circuitbreaker.messages == [CircuitBreakerFailed(name="my", failure_count=1)]
-    circuitbreaker.messages.clear()
+    assert context.messages == [CircuitBreakerFailed(name="my", failure_count=1)]
+    context.messages.clear()
 
     state = ClosedState()
     state.failure_count = 1
-    assert circuitbreaker._state == state
-    assert circuitbreaker.failure_count == 1
+    assert context._state == state
+    assert context.failure_count == 1
 
     try:
-        with circuitbreaker:
+        with context:
             raise RuntimeError("Boom")
     except RuntimeError:
         pass
 
-    assert circuitbreaker.messages == [
-        CircuitBreakerStateChanged(
-            name="my", state="opened", opened_at=circuitbreaker.opened_at
-        ),
+    assert context.messages == [
+        ContextChanged(name="my", state="opened", opened_at=context.opened_at),
     ]
     state = OpenedState()
-    state.opened_at = circuitbreaker.opened_at or 0
-    assert circuitbreaker._state == state
+    state.opened_at = context.opened_at or 0
+    assert context._state == state
 
 
 def test_circuitbreaker_reset_after_failure():
-    circuitbreaker = CircuitBreaker("my", threshold=5, ttl=1)
+    context = Context("my", threshold=5, ttl=1)
     try:
-        with circuitbreaker:
+        with context:
             raise RuntimeError("Boom")
     except RuntimeError:
         pass
 
-    assert circuitbreaker.messages == [CircuitBreakerFailed(name="my", failure_count=1)]
-    assert circuitbreaker.failure_count == 1
-    circuitbreaker.messages.clear()
-    with circuitbreaker:
+    assert context.messages == [CircuitBreakerFailed(name="my", failure_count=1)]
+    assert context.failure_count == 1
+    context.messages.clear()
+    with context:
         pass
 
-    assert circuitbreaker.messages == [CircuitBreakerRecovered(name="my")]
+    assert context.messages == [CircuitBreakerRecovered(name="my")]
 
 
 @pytest.mark.asyncio
@@ -129,34 +119,34 @@ def test_circuitbreaker_can_exclude_exception():
     class MyException(RuntimeError):
         pass
 
-    circuitbreaker = CircuitBreaker("my", threshold=5, ttl=1, exclude=[MyException])
+    context = Context("my", threshold=5, ttl=1, exclude=[MyException])
     try:
-        with circuitbreaker:
+        with context:
             raise MyException("Boom")
     except MyException:
         pass
 
-    assert circuitbreaker.messages == []
-    assert circuitbreaker.failure_count == 0
+    assert context.messages == []
+    assert context.failure_count == 0
 
     try:
-        with circuitbreaker:
+        with context:
             raise RuntimeError("Boom")
     except RuntimeError:
         pass
 
-    assert circuitbreaker.messages == [CircuitBreakerFailed(name="my", failure_count=1)]
-    assert circuitbreaker.failure_count == 1
-    circuitbreaker.messages.clear()
+    assert context.messages == [CircuitBreakerFailed(name="my", failure_count=1)]
+    assert context.failure_count == 1
+    context.messages.clear()
 
     try:
-        with circuitbreaker:
+        with context:
             raise MyException("Boom")
     except MyException:
         pass
 
-    assert circuitbreaker.messages == [CircuitBreakerRecovered(name="my")]
-    assert circuitbreaker.failure_count == 0
+    assert context.messages == [CircuitBreakerRecovered(name="my")]
+    assert context.failure_count == 0
 
 
 @pytest.mark.asyncio
@@ -166,37 +156,37 @@ def test_circuitbreaker_can_exclude_function():
             super().__init__(f"{status_code} Error")
             self.status_code = status_code
 
-    circuitbreaker = CircuitBreaker(
+    context = Context(
         "my",
         threshold=5,
         ttl=1,
         exclude=[(HTTPError, lambda exc: exc.status_code < 500)],
     )
     try:
-        with circuitbreaker:
+        with context:
             raise HTTPError(503)
     except HTTPError:
         pass
 
-    assert circuitbreaker.messages == [CircuitBreakerFailed(name="my", failure_count=1)]
-    assert circuitbreaker.failure_count == 1
-    circuitbreaker.messages.clear()
+    assert context.messages == [CircuitBreakerFailed(name="my", failure_count=1)]
+    assert context.failure_count == 1
+    context.messages.clear()
 
     try:
-        with circuitbreaker:
+        with context:
             raise HTTPError(404)
     except HTTPError:
         pass
 
-    assert circuitbreaker.messages == [CircuitBreakerRecovered(name="my")]
-    assert circuitbreaker.failure_count == 0
-    circuitbreaker.messages.clear()
+    assert context.messages == [CircuitBreakerRecovered(name="my")]
+    assert context.failure_count == 0
+    context.messages.clear()
 
     try:
-        with circuitbreaker:
+        with context:
             raise RuntimeError("Boom")
     except RuntimeError:
         pass
 
-    assert circuitbreaker.messages == [CircuitBreakerFailed(name="my", failure_count=1)]
-    assert circuitbreaker.failure_count == 1
+    assert context.messages == [CircuitBreakerFailed(name="my", failure_count=1)]
+    assert context.failure_count == 1
