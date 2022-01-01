@@ -2,7 +2,6 @@ from functools import wraps
 from types import TracebackType
 from typing import Any, Callable, Dict, Optional, Type
 
-from purgatory.domain.messages.base import Event
 from purgatory.domain.messages.commands import CreateCircuitBreaker
 from purgatory.domain.messages.events import (
     CircuitBreakerCreated,
@@ -19,6 +18,7 @@ from purgatory.service.handlers.circuitbreaker import (
 )
 from purgatory.service.messagebus import MessageRegistry
 from purgatory.service.unit_of_work import AbstractUnitOfWork, InMemoryUnitOfWork
+from purgatory.typing import Hook, TTL, Threshold
 
 
 class CircuitBreaker:
@@ -49,7 +49,7 @@ class CircuitBreaker:
 
 class PublicEvent:
     def __init__(
-        self, messagebus: MessageRegistry, hook: Callable[[str, str, Event], None]
+        self, messagebus: MessageRegistry, hook: Hook
     ) -> None:
         messagebus.add_listener(CircuitBreakerCreated, self.cb_created)
         messagebus.add_listener(ContextChanged, self.cb_state_changed)
@@ -81,8 +81,8 @@ class PublicEvent:
 class CircuitBreakerFactory:
     def __init__(
         self,
-        default_threshold: int = 5,
-        default_ttl: float = 30,
+        default_threshold: Threshold = 5,
+        default_ttl: TTL = 30,
         exclude: ExcludeType = None,
         uow: Optional[AbstractUnitOfWork] = None,
     ):
@@ -111,7 +111,11 @@ class CircuitBreakerFactory:
             raise RuntimeError(f"{listener} is not listening {self}")
 
     async def get_breaker(
-        self, circuit: str, threshold=None, ttl=None, exclude: ExcludeType = None
+        self,
+        circuit: str,
+        threshold: Optional[Threshold] = None,
+        ttl: Optional[TTL] = None,
+        exclude: ExcludeType = None,
     ) -> CircuitBreaker:
         async with self.uow as uow:
             brk = await uow.contexts.get(circuit)
@@ -127,7 +131,11 @@ class CircuitBreakerFactory:
         return CircuitBreaker(brk, self.uow, self.messagebus)
 
     def __call__(
-        self, circuit: str, threshold=None, ttl=None, exclude: ExcludeType = None
+        self,
+        circuit: str,
+        threshold: Optional[Threshold] = None,
+        ttl: Optional[TTL] = None,
+        exclude: ExcludeType = None,
     ) -> Any:
         def decorator(func: Callable) -> Callable:
             @wraps(func)

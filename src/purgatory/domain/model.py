@@ -15,7 +15,7 @@ from purgatory.domain.messages.events import (
     CircuitBreakerRecovered,
     ContextChanged,
 )
-from purgatory.typing import CircuitBreakerName, StateName
+from purgatory.typing import TTL, CircuitBreakerName, StateName, Threshold
 
 ExcludeExcType = Type[BaseException]
 ExcludeTypeFunc = Tuple[ExcludeExcType, Callable[..., bool]]
@@ -26,19 +26,23 @@ ExcludeType = List[
     ]
 ]
 
+CLOSED: StateName = "closed"
+OPENED: StateName = "opened"
+HALF_OPENED: StateName = "half-opened"
+
 
 class Context:
     name: CircuitBreakerName
-    threshold: int
-    ttl: float
+    threshold: Threshold
+    ttl: TTL
     messages: List[Event]
     exclude_list: ExcludeType
 
     def __init__(
         self,
         name: CircuitBreakerName,
-        threshold: int,
-        ttl: float,
+        threshold: Threshold,
+        ttl: TTL,
         state="closed",
         failure_count: int = 0,
         opened_at: Optional[float] = None,
@@ -174,7 +178,7 @@ class ClosedState(State):
     """In closed state, track for failure."""
 
     failure_count: int
-    name: str = "closed"
+    name: StateName = CLOSED
 
     def __init__(self) -> None:
         self.failure_count = 0
@@ -201,7 +205,7 @@ class ClosedState(State):
 class OpenedState(State, Exception):
     """In open state, reopen after a TTL."""
 
-    name: str = "opened"
+    name: StateName = OPENED
     opened_at: float
 
     def __init__(self) -> None:
@@ -234,7 +238,7 @@ class OpenedState(State, Exception):
 class HalfOpenedState(State):
     """In half open state, decide to reopen or to close."""
 
-    name: str = "half-opened"
+    name: StateName = HALF_OPENED
 
     def handle_new_request(self, context: Context):
         """In half open state, we reset the failure counter to restart 0."""
