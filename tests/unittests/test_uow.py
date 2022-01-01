@@ -10,7 +10,7 @@ class TrackableUnitOfWork(AbstractUnitOfWork):
         super().__init__()
         self.commited = False
         self.rollbacked = False
-        self.circuit_breakers = InMemoryRepository()
+        self.contexts = InMemoryRepository()
 
     async def commit(self):
         self.commited = True
@@ -46,6 +46,6 @@ async def test_uow_is_collecting_events():
     a = Message()
     b = Message()
     c = Message()
-    uow.circuit_breakers.messages = [a, b, c]
+    uow.contexts.messages = [a, b, c]
     events = list(uow.collect_new_events())
     assert events == [a, b, c]

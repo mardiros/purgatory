@@ -14,11 +14,11 @@ from purgatory.domain.repository import (
 
 
 class AbstractUnitOfWork(abc.ABC):
-    circuit_breakers: AbstractRepository
+    contexts: AbstractRepository
 
     def collect_new_events(self) -> Generator[Message, None, None]:
-        while self.circuit_breakers.messages:
-            yield self.circuit_breakers.messages.pop(0)
+        while self.contexts.messages:
+            yield self.contexts.messages.pop(0)
 
     async def initialize(self):
         """Override to initialize  repositories."""
@@ -47,7 +47,7 @@ class AbstractUnitOfWork(abc.ABC):
 
 class InMemoryUnitOfWork(AbstractUnitOfWork):
     def __init__(self):
-        self.circuit_breakers = InMemoryRepository()
+        self.contexts = InMemoryRepository()
 
     async def commit(self):
         """Do nothing."""
@@ -58,10 +58,10 @@ class InMemoryUnitOfWork(AbstractUnitOfWork):
 
 class RedisUnitOfWork(AbstractUnitOfWork):
     def __init__(self, url: str):
-        self.circuit_breakers = RedisRepository(url)
+        self.contexts = RedisRepository(url)
 
     async def initialize(self):
-        await self.circuit_breakers.initialize()
+        await self.contexts.initialize()
 
     async def commit(self):
         """Do nothing."""

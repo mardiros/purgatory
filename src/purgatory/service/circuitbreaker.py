@@ -92,9 +92,7 @@ class CircuitBreakerFactory:
         self.uow = uow or InMemoryUnitOfWork()
         self.messagebus = MessageRegistry()
         self.messagebus.add_listener(CreateCircuitBreaker, register_circuit_breaker)
-        self.messagebus.add_listener(
-            ContextChanged, save_circuit_breaker_state
-        )
+        self.messagebus.add_listener(ContextChanged, save_circuit_breaker_state)
         self.messagebus.add_listener(CircuitBreakerFailed, inc_circuit_breaker_failure)
         self.messagebus.add_listener(CircuitBreakerRecovered, reset_failure)
         self.listeners: Dict[Callable, Any] = {}
@@ -116,7 +114,7 @@ class CircuitBreakerFactory:
         self, circuit: str, threshold=None, ttl=None, exclude: ExcludeType = None
     ) -> CircuitBreaker:
         async with self.uow as uow:
-            brk = await uow.circuit_breakers.get(circuit)
+            brk = await uow.contexts.get(circuit)
         if brk is None:
             async with self.uow as uow:
                 bkr_threshold = threshold or self.default_threshold

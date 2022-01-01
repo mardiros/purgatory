@@ -22,7 +22,7 @@ async def test_circuitbreaker_factory_context(circuitbreaker):
 
     assert count == 3
     assert (await circuitbreaker.get_breaker("my")).context.messages == []
-    assert cast(InMemoryRepository, circuitbreaker.uow.circuit_breakers).breakers == {
+    assert cast(InMemoryRepository, circuitbreaker.uow.contexts).breakers == {
         "my": Context(name="my", threshold=5, ttl=30),
         "my2": Context(name="my2", threshold=42, ttl=42),
     }

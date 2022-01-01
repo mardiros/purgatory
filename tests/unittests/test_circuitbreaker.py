@@ -32,7 +32,7 @@ async def test_circuitbreaker_factory_decorator(circuitbreaker: CircuitBreakerFa
     with pytest.raises(RuntimeError):
         await fail_or_success(fail=True)
 
-    brk = await circuitbreaker.uow.circuit_breakers.get("client")
+    brk = await circuitbreaker.uow.contexts.get("client")
     assert brk == Context(name="client", threshold=5, ttl=30)
     # assert circuitbreaker.breakers["client"]._state._state.failure_count == 1
 
@@ -41,7 +41,7 @@ async def test_circuitbreaker_factory_decorator(circuitbreaker: CircuitBreakerFa
         pass
 
     await _success2()
-    brk = await circuitbreaker.uow.circuit_breakers.get("client2")
+    brk = await circuitbreaker.uow.contexts.get("client2")
     assert brk == Context(name="client2", threshold=15, ttl=30)
 
     @circuitbreaker(circuit="client3", ttl=60)
@@ -49,7 +49,7 @@ async def test_circuitbreaker_factory_decorator(circuitbreaker: CircuitBreakerFa
         pass
 
     await _success3()
-    brk = await circuitbreaker.uow.circuit_breakers.get("client3")
+    brk = await circuitbreaker.uow.contexts.get("client3")
     assert brk == Context(name="client3", threshold=5, ttl=60)
 
 

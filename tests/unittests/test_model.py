@@ -7,7 +7,7 @@ from purgatory.domain.messages.events import (
     CircuitBreakerRecovered,
     ContextChanged,
 )
-from purgatory.domain.model import Context, ClosedState, OpenedState
+from purgatory.domain.model import ClosedState, Context, OpenedState
 
 
 def test_circuitbreaker_open_raise():
@@ -19,9 +19,7 @@ def test_circuitbreaker_open_raise():
             count += 1
     assert count == 0
     assert context.messages == [
-        ContextChanged(
-            name="my", state="opened", opened_at=context.opened_at
-        ),
+        ContextChanged(name="my", state="opened", opened_at=context.opened_at),
     ]
 
 
@@ -31,9 +29,7 @@ async def test_circuitbreaker_open_closed_after_ttl_passed():
     state = OpenedState()
     context.set_state(state)
     assert context.messages == [
-        ContextChanged(
-            name="my", state="opened", opened_at=state.opened_at
-        ),
+        ContextChanged(name="my", state="opened", opened_at=state.opened_at),
     ]
     context.messages.clear()
     await asyncio.sleep(0.1)
@@ -63,13 +59,9 @@ async def test_circuitbreaker_open_reopened_after_ttl_passed():
     except RuntimeError:
         pass
     assert context.messages == [
-        ContextChanged(
-            name="my", state="opened", opened_at=state.opened_at
-        ),
+        ContextChanged(name="my", state="opened", opened_at=state.opened_at),
         ContextChanged(name="my", state="half-opened", opened_at=None),
-        ContextChanged(
-            name="my", state="opened", opened_at=context.opened_at
-        ),
+        ContextChanged(name="my", state="opened", opened_at=context.opened_at),
     ]
     state = OpenedState()
     state.opened_at = context.opened_at or 0
@@ -98,9 +90,7 @@ def test_circuitbreaker_closed_state_opening():
         pass
 
     assert context.messages == [
-        ContextChanged(
-            name="my", state="opened", opened_at=context.opened_at
-        ),
+        ContextChanged(name="my", state="opened", opened_at=context.opened_at),
     ]
     state = OpenedState()
     state.opened_at = context.opened_at or 0
