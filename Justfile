@@ -7,6 +7,9 @@ doc:
 cleandoc:
     cd docs && poetry run make clean
 
+rtd:
+    poetry export --dev -f requirements.txt -o docs/requirements.txt
+
 test: unittest lint
 
 lf:
