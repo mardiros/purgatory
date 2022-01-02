@@ -28,5 +28,5 @@ To choose a storage backend, the unit of work has to be configured.
 
 .. important::
 
-   When using the RedisUnitOfWork, the coroutint ``initialize`` must
+   When using the RedisUnitOfWork, the coroutine ``initialize`` must
    be called to initialize the redis connection.

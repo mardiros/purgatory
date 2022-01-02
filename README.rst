@@ -76,6 +76,14 @@ Purgatory is fully typed and fully tested.
 .. _`blacksmith`: https://python-blacksmith.readthedocs.io/en/latest/
 
 
+Read More
+---------
+
+You can read the `full documentation of this library here`_.
+
+.. _`full documentation of this library here`: https://python-blacksmith.readthedocs.io/en/latest/user/introduction.html
+
+
 Alternatives
 ------------
 

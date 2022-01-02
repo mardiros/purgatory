@@ -7,7 +7,7 @@ a factory that keep the default configuration for the circuits and for state.
 Note that all the parameters of the factory are optionals.
 
 The circuitbreaker will track for exceptions that can be raised in a portion
-of code, using a decorator or a ``with`` context.
+of code, using a ``decorator`` or a ``async with`` context.
 
 Example of a circuit breaker that is used with the `httpx`_ library:
 
