@@ -18,7 +18,7 @@ from purgatory.service.handlers.circuitbreaker import (
 )
 from purgatory.service.messagebus import MessageRegistry
 from purgatory.service.unit_of_work import AbstractUnitOfWork, InMemoryUnitOfWork
-from purgatory.typing import Hook, TTL, Threshold
+from purgatory.typing import CircuitName, Hook, TTL, Threshold
 
 
 class CircuitBreaker:
@@ -95,15 +95,15 @@ class CircuitBreakerFactory:
         self.messagebus.add_listener(ContextChanged, save_circuit_breaker_state)
         self.messagebus.add_listener(CircuitBreakerFailed, inc_circuit_breaker_failure)
         self.messagebus.add_listener(CircuitBreakerRecovered, reset_failure)
-        self.listeners: Dict[Callable, Any] = {}
+        self.listeners: Dict[Hook, PublicEvent] = {}
 
     async def initialize(self):
         await self.uow.initialize()
 
-    def add_listener(self, listener):
+    def add_listener(self, listener: Hook):
         self.listeners[listener] = PublicEvent(self.messagebus, listener)
 
-    def remove_listener(self, listener):
+    def remove_listener(self, listener: Hook):
         try:
             self.listeners[listener].remove_listeners(self.messagebus)
             del self.listeners[listener]
@@ -112,7 +112,7 @@ class CircuitBreakerFactory:
 
     async def get_breaker(
         self,
-        circuit: str,
+        circuit: CircuitName,
         threshold: Optional[Threshold] = None,
         ttl: Optional[TTL] = None,
         exclude: ExcludeType = None,

@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from purgatory.domain.messages.base import Message
 from purgatory.domain.model import Context
-from purgatory.typing import CircuitBreakerName
+from purgatory.typing import CircuitName
 
 
 class ConfigurationError(RuntimeError):
@@ -19,7 +19,7 @@ class AbstractRepository(abc.ABC):
         """Override to initialize the repository asynchronously"""
 
     @abc.abstractmethod
-    async def get(self, name: CircuitBreakerName) -> Optional[Context]:
+    async def get(self, name: CircuitName) -> Optional[Context]:
         """Load breakers from the repository."""
 
     @abc.abstractmethod
@@ -49,7 +49,7 @@ class InMemoryRepository(AbstractRepository):
         self.breakers = {}
         self.messages = []
 
-    async def get(self, name: CircuitBreakerName) -> Optional[Context]:
+    async def get(self, name: CircuitName) -> Optional[Context]:
         """Add a circuit breaker into the repository."""
         return self.breakers.get(name)
 
@@ -85,7 +85,7 @@ class RedisRepository(AbstractRepository):
     async def initialize(self):
         await self.redis.initialize()
 
-    async def get(self, name: CircuitBreakerName) -> Optional[Context]:
+    async def get(self, name: CircuitName) -> Optional[Context]:
         """Add a circuit breaker into the repository."""
         data = await self.redis.get(f"{self.prefix}{name}")
         if not data:

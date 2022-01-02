@@ -1,5 +1,15 @@
 default_test_suite := 'tests/unittests'
 
+doc:
+    cd docs && poetry run make html
+    xdg-open docs/build/html/index.html
+
+cleandoc:
+    cd docs && poetry run make clean
+
+rtd:
+    poetry export --dev -f requirements.txt -o docs/requirements.txt
+
 test: unittest lint
 
 lf:

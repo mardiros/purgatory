@@ -8,4 +8,78 @@ Purgatory
    :target: https://codecov.io/gh/mardiros/purgatory
     
 
-A circuit breaker implementation for asyncio.
+Purgatory is an implementation of the circuit breaker pattern.
+
+.. note::
+
+   It is used to detect failures and encapsulates the logic of preventing
+   a failure from constantly recurring, during maintenance, temporary
+   external system failure or unexpected system difficulties. 
+
+   Source: https://en.wikipedia.org/wiki/Circuit_breaker_design_pattern
+
+
+Why another Circuit Breaker implementation ?
+--------------------------------------------
+
+The Purgatory library has been develop to be used in `blacksmith`_ where
+the library aiobreaker was used but I encountered limitation so, I decide
+to build my own implementation that feet well with `blacksmith`_.
+
+
+Features
+--------
+
+Purgatory supports the creation of many circuitbreaker easily, and 
+can be used as context manager or decorator.
+
+Example with a context manager
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+::
+
+   from purgatory import CircuitBreakerFactory
+
+   circuitbreaker = CircuitBreakerFactory()
+   async with await circuitbreaker.get_breaker("my_circuit"):
+      ...
+
+
+Example with a decorator
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+::
+
+   from purgatory import CircuitBreakerFactory
+
+   circuitbreaker = CircuitBreakerFactory()
+
+   @circuitbreaker("another circuit")
+   async def function_that_may_fail():
+      ...
+
+
+The state of every circuits can be stored in memory, shared in redis, or
+be completly customized.
+
+It also support monitoring, using event hook.
+
+Purgatory is fully typed and fully tested.
+
+
+.. _`blacksmith`: https://python-blacksmith.readthedocs.io/en/latest/
+
+
+Alternatives
+------------
+
+Here is a list of alternatives, which may or may not support coroutines.
+
+ * aiobreaker - https://pypi.org/project/aiobreaker/
+ * circuitbreaker - https://pypi.org/project/circuitbreaker/
+ * pycircuitbreaker - https://pypi.org/project/pycircuitbreaker/
+ * pybreaker - https://pypi.org/project/pybreaker/
+ * lasier - https://pypi.org/project/lasier/
+ * breakers - https://pypi.org/project/breakers/
+ * pybreaker - https://pypi.org/project/pybreaker/
+ * python-circuit - https://pypi.org/project/python-circuit/

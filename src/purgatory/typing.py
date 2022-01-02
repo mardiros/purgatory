@@ -3,7 +3,7 @@ from typing import Callable
 from purgatory.domain.messages.base import Event
 
 
-CircuitBreakerName = str
+CircuitName = str
 TTL = float
 Threshold = int
 
@@ -14,7 +14,7 @@ try:
     StateName = Literal["opened", "closed", "half-opened"]
     Hook = Callable[
         [
-            CircuitBreakerName,
+            CircuitName,
             Literal["circuit_breaker_created", "state_changed", "failed", "recovered"],
             Event,
         ],
@@ -26,7 +26,7 @@ except ImportError:
     EventType = str
     Hook = Callable[
         [
-            CircuitBreakerName,
+            CircuitName,
             str,
             Event,
         ],
