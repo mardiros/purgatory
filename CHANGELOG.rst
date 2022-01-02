@@ -1,3 +1,9 @@
+0.5.0 (2021-22-01)
+------------------
+* Refactor. Rename model and service.
+* Improve typing.
+* Publicly expose more classes in the main module.
+
 0.4.0 (2021-12-31)
 ------------------
 * Add a way to monitor circuit breakers.
