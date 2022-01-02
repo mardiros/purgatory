@@ -1,11 +1,17 @@
 Purgatory
 =========
 
+.. image:: https://readthedocs.org/projects/purgatory/badge/?version=latest
+   :target: https://purgatory.readthedocs.io/en/latest/?badge=latest
+   :alt: Documentation Status
+
 .. image:: https://github.com/mardiros/purgatory/actions/workflows/main.yml/badge.svg
    :target: https://github.com/mardiros/purgatory/actions/workflows/main.yml
+   :alt: Continuous Integration Status
 
 .. image:: https://codecov.io/gh/mardiros/purgatory/branch/main/graph/badge.svg?token=LFVOQC2C9E
    :target: https://codecov.io/gh/mardiros/purgatory
+   :alt: Code Coverage Report
     
 
 Purgatory is an implementation of the circuit breaker pattern.
