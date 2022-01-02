@@ -12,7 +12,7 @@ from purgatory.domain.model import ClosedState, Context, OpenedState
 
 def test_circuitbreaker_open_raise():
     context = Context("my", threshold=2, ttl=42)
-    context.set_state(OpenedState())
+    context.set_state(OpenedState("my"))
     count = 0
     with pytest.raises(OpenedState):
         with context:
@@ -26,7 +26,7 @@ def test_circuitbreaker_open_raise():
 @pytest.mark.asyncio
 async def test_circuitbreaker_open_closed_after_ttl_passed():
     context = Context("my", threshold=5, ttl=0.1)
-    state = OpenedState()
+    state = OpenedState("my")
     context.set_state(state)
     assert context.messages == [
         ContextChanged(name="my", state="opened", opened_at=state.opened_at),
@@ -49,7 +49,7 @@ async def test_circuitbreaker_open_closed_after_ttl_passed():
 @pytest.mark.asyncio
 async def test_circuitbreaker_open_reopened_after_ttl_passed():
     context = Context("my", threshold=5, ttl=0.1)
-    state = OpenedState()
+    state = OpenedState("my")
     context.set_state(state)
     await asyncio.sleep(0.1)
 
@@ -63,7 +63,7 @@ async def test_circuitbreaker_open_reopened_after_ttl_passed():
         ContextChanged(name="my", state="half-opened", opened_at=None),
         ContextChanged(name="my", state="opened", opened_at=context.opened_at),
     ]
-    state = OpenedState()
+    state = OpenedState("my")
     state.opened_at = context.opened_at or 0
     assert context._state == state
 
@@ -92,7 +92,7 @@ def test_circuitbreaker_closed_state_opening():
     assert context.messages == [
         ContextChanged(name="my", state="opened", opened_at=context.opened_at),
     ]
-    state = OpenedState()
+    state = OpenedState("my")
     state.opened_at = context.opened_at or 0
     assert context._state == state
 

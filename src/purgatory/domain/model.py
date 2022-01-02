@@ -52,11 +52,12 @@ class Context:
         self.ttl = ttl
         self.threshold = threshold
 
+        args = {OpenedState.name: [name]}.get(state, [])
         self._state = {
             ClosedState.name: ClosedState,
             OpenedState.name: OpenedState,
             HalfOpenedState.name: HalfOpenedState,
-        }[state]()
+        }[state](*args)
         self._state.opened_at = opened_at
         self._state.failure_count = failure_count
         self.messages = []
@@ -189,7 +190,7 @@ class ClosedState(State):
     def handle_exception(self, context: Context, exc: BaseException):
         self.failure_count += 1
         if self.failure_count >= context.threshold:
-            opened = OpenedState()
+            opened = OpenedState(context.name)
             context.set_state(opened)
         else:
             context.mark_failure(self.failure_count)
@@ -208,9 +209,10 @@ class OpenedState(State, Exception):
     name: StateName = OPENED
     opened_at: float
 
-    def __init__(self) -> None:
-        Exception.__init__(self, "Circuit breaker is open")
+    def __init__(self, circuit_name: CircuitBreakerName) -> None:
+        Exception.__init__(self, f"Circuit {circuit_name} is open")
         self.opened_at = time.time()
+        self.circuit_name = circuit_name
 
     def handle_new_request(self, context: Context):
         closed_at = self.opened_at + context.ttl
@@ -245,7 +247,7 @@ class HalfOpenedState(State):
 
     def handle_exception(self, context: Context, exc: BaseException):
         """If an exception happens, then the circuit is reopen directly."""
-        opened = OpenedState()
+        opened = OpenedState(context.name)
         context.set_state(opened)
 
     def handle_end_request(self, context: Context):
