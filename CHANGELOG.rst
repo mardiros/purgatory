@@ -1,3 +1,7 @@
+0.5.1 (2021-22-02)
+------------------
+* Add documentation
+
 0.5.0 (2021-22-01)
 ------------------
 * Refactor. Rename model and service.
