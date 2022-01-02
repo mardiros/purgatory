@@ -15,7 +15,7 @@ from purgatory.domain.messages.events import (
     CircuitBreakerRecovered,
     ContextChanged,
 )
-from purgatory.typing import TTL, CircuitBreakerName, StateName, Threshold
+from purgatory.typing import TTL, CircuitName, StateName, Threshold
 
 ExcludeExcType = Type[BaseException]
 ExcludeTypeFunc = Tuple[ExcludeExcType, Callable[..., bool]]
@@ -32,7 +32,7 @@ HALF_OPENED: StateName = "half-opened"
 
 
 class Context:
-    name: CircuitBreakerName
+    name: CircuitName
     threshold: Threshold
     ttl: TTL
     messages: List[Event]
@@ -40,7 +40,7 @@ class Context:
 
     def __init__(
         self,
-        name: CircuitBreakerName,
+        name: CircuitName,
         threshold: Threshold,
         ttl: TTL,
         state="closed",
@@ -209,7 +209,7 @@ class OpenedState(State, Exception):
     name: StateName = OPENED
     opened_at: float
 
-    def __init__(self, circuit_name: CircuitBreakerName) -> None:
+    def __init__(self, circuit_name: CircuitName) -> None:
         Exception.__init__(self, f"Circuit {circuit_name} is open")
         self.opened_at = time.time()
         self.circuit_name = circuit_name
