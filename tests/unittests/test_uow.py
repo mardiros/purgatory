@@ -1,7 +1,7 @@
 import pytest
 
 from purgatory.domain.messages.base import Message
-from purgatory.domain.repository import InMemoryRepository
+from purgatory.service.repository import InMemoryRepository
 from purgatory.service.unit_of_work import AbstractUnitOfWork, InMemoryUnitOfWork
 
 

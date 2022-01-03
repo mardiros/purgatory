@@ -4,8 +4,8 @@ from typing import Any, Optional, cast
 import pytest
 
 from purgatory import CircuitBreakerFactory
-from purgatory.domain.repository import InMemoryRepository, RedisRepository
 from purgatory.service.messagebus import MessageRegistry
+from purgatory.service.repository import InMemoryRepository, RedisRepository
 from purgatory.service.unit_of_work import RedisUnitOfWork
 
 

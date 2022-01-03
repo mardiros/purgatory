@@ -3,7 +3,7 @@ from typing import cast
 import pytest
 
 from purgatory.domain.model import Context
-from purgatory.domain.repository import InMemoryRepository
+from purgatory.service.repository import InMemoryRepository
 
 
 @pytest.mark.asyncio

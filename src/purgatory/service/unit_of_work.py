@@ -6,7 +6,7 @@ from types import TracebackType
 from typing import Generator, Optional, Type
 
 from purgatory.domain.messages import Message
-from purgatory.domain.repository import (
+from purgatory.service.repository import (
     AbstractRepository,
     InMemoryRepository,
     RedisRepository,

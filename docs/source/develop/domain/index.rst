@@ -5,5 +5,4 @@ Domain
    :maxdepth: 2
 
    model
-   repository
    messages

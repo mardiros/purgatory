@@ -7,20 +7,19 @@ except pkg_resources.DistributionNotFound:
     pass
 
 
+from purgatory.domain.messages import Event
+from purgatory.domain.messages.events import (
+    CircuitBreakerCreated,
+    CircuitBreakerFailed,
+    CircuitBreakerRecovered,
+    ContextChanged,
+)
 from purgatory.service.circuitbreaker import CircuitBreakerFactory
 from purgatory.service.unit_of_work import (
     AbstractUnitOfWork,
     InMemoryUnitOfWork,
     RedisUnitOfWork,
 )
-from purgatory.domain.messages import Event
-from purgatory.domain.messages.events import (
-    CircuitBreakerCreated,
-    ContextChanged,
-    CircuitBreakerFailed,
-    CircuitBreakerRecovered,
-)
-
 
 __all__ = [
     "CircuitBreakerFactory",
