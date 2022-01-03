@@ -10,15 +10,15 @@ from purgatory.domain.messages.events import (
     ContextChanged,
 )
 from purgatory.domain.model import Context, ExcludeType
-from purgatory.service.handlers import register_circuit_breaker
-from purgatory.service.handlers.circuitbreaker import (
+from purgatory.service.message_handlers import (
     inc_circuit_breaker_failure,
+    register_circuit_breaker,
     reset_failure,
     save_circuit_breaker_state,
 )
 from purgatory.service.messagebus import MessageRegistry
 from purgatory.service.unit_of_work import AbstractUnitOfWork, InMemoryUnitOfWork
-from purgatory.typing import CircuitName, Hook, TTL, Threshold
+from purgatory.typing import TTL, CircuitName, Hook, Threshold
 
 
 class CircuitBreaker:
@@ -48,9 +48,7 @@ class CircuitBreaker:
 
 
 class PublicEvent:
-    def __init__(
-        self, messagebus: MessageRegistry, hook: Hook
-    ) -> None:
+    def __init__(self, messagebus: MessageRegistry, hook: Hook) -> None:
         messagebus.add_listener(CircuitBreakerCreated, self.cb_created)
         messagebus.add_listener(ContextChanged, self.cb_state_changed)
         messagebus.add_listener(CircuitBreakerFailed, self.cb_failed)

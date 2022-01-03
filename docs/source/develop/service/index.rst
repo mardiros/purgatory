@@ -6,5 +6,5 @@ Service
 
    unit_of_work
    messagebus
-   handlers
+   message_handlers
    circuitbreaker
