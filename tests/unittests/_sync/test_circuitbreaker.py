@@ -9,74 +9,74 @@ from purgatory.domain.messages.events import (
     ContextChanged,
 )
 from purgatory.domain.model import Context
-from purgatory.service._async.circuitbreaker import AsyncCircuitBreakerFactory
-from tests.unittests.time import AsyncSleep
+from purgatory.service._sync.circuitbreaker import SyncCircuitBreakerFactory
+from tests.unittests.time import SyncSleep
 
 
 @pytest.mark.asyncio
-async def test_circuitbreaker_factory_decorator(
-    circuitbreaker: AsyncCircuitBreakerFactory,
+def test_circuitbreaker_factory_decorator(
+    circuitbreaker: SyncCircuitBreakerFactory,
 ):
 
     count = 0
 
     @circuitbreaker(circuit="client")
-    async def fail_or_success(fail=False):
+    def fail_or_success(fail=False):
         if fail:
             raise RuntimeError("Boom")
         nonlocal count
         count += 1
 
-    await fail_or_success()
+    fail_or_success()
     assert count == 1
 
     with pytest.raises(RuntimeError):
-        await fail_or_success(fail=True)
+        fail_or_success(fail=True)
 
-    brk = await circuitbreaker.uow.contexts.get("client")
+    brk = circuitbreaker.uow.contexts.get("client")
     assert brk == Context(name="client", threshold=5, ttl=30)
     # assert circuitbreaker.breakers["client"]._state._state.failure_count == 1
 
     @circuitbreaker(circuit="client2", threshold=15)
-    async def _success2():
+    def _success2():
         pass
 
-    await _success2()
-    brk = await circuitbreaker.uow.contexts.get("client2")
+    _success2()
+    brk = circuitbreaker.uow.contexts.get("client2")
     assert brk == Context(name="client2", threshold=15, ttl=30)
 
     @circuitbreaker(circuit="client3", ttl=60)
-    async def _success3():
+    def _success3():
         pass
 
-    await _success3()
-    brk = await circuitbreaker.uow.contexts.get("client3")
+    _success3()
+    brk = circuitbreaker.uow.contexts.get("client3")
     assert brk == Context(name="client3", threshold=5, ttl=60)
 
 
 @pytest.mark.asyncio
-async def test_redis_circuitbreaker_factory_decorator(
-    fake_redis, circuitbreaker_redis: AsyncCircuitBreakerFactory
+def test_redis_circuitbreaker_factory_decorator(
+    fake_redis, circuitbreaker_redis: SyncCircuitBreakerFactory
 ):
 
     count = 0
-    await circuitbreaker_redis.initialize()
+    circuitbreaker_redis.initialize()
 
     @circuitbreaker_redis(circuit="client", threshold=3, ttl=0.1)
-    async def fail_or_success(fail=False):
+    def fail_or_success(fail=False):
         if fail:
             raise RuntimeError("Boom")
         nonlocal count
         count += 1
 
-    async def fail():
+    def fail():
         try:
-            await fail_or_success(True)
+            fail_or_success(True)
         except RuntimeError:
             pass
 
-    await fail()
-    await fail()
+    fail()
+    fail()
 
     assert fake_redis.deserialized_storage == {
         "cbr::client": {
@@ -89,8 +89,8 @@ async def test_redis_circuitbreaker_factory_decorator(
         "cbr::client::failure_count": 2,
     }
 
-    await fail_or_success(fail=False)
-    await fail()
+    fail_or_success(fail=False)
+    fail()
 
 
 @pytest.mark.parametrize("uow", ["inmemory", "redis"])
@@ -104,16 +104,16 @@ async def test_redis_circuitbreaker_factory_decorator(
     ],
 )
 @pytest.mark.asyncio
-async def test_circuitbreaker_factory_get_breaker(
+def test_circuitbreaker_factory_get_breaker(
     uow,
     cbr,
-    circuitbreaker: AsyncCircuitBreakerFactory,
-    circuitbreaker_redis: AsyncCircuitBreakerFactory,
+    circuitbreaker: SyncCircuitBreakerFactory,
+    circuitbreaker_redis: SyncCircuitBreakerFactory,
 ):
     cbreaker = {"inmemory": circuitbreaker, "redis": circuitbreaker_redis}[uow]
-    await cbreaker.initialize()
+    cbreaker.initialize()
 
-    breaker = await cbreaker.get_breaker(*cbr[0])
+    breaker = cbreaker.get_breaker(*cbr[0])
     assert breaker.context.name == cbr[1][0]
     assert breaker.context.threshold == cbr[1][1]
     assert breaker.context.ttl == cbr[1][2]
@@ -130,24 +130,24 @@ def test_circuitbreaker_repr(state):
 
 
 @pytest.mark.asyncio
-async def test_circuitbreaker_raise_state_changed_event(circuitbreaker):
+def test_circuitbreaker_raise_state_changed_event(circuitbreaker):
 
     evts = []
 
-    async def evt_handler(cmd: ContextChanged, uow):
+    def evt_handler(cmd: ContextChanged, uow):
         evts.append(asdict(cmd))
 
     circuitbreaker.messagebus.add_listener(ContextChanged, evt_handler)
-    brk = await circuitbreaker.get_breaker("my", threshold=2)
+    brk = circuitbreaker.get_breaker("my", threshold=2)
     try:
-        async with brk:
+        with brk:
             raise RuntimeError("Boom")
     except RuntimeError:
         pass
     assert evts == []
 
     try:
-        async with brk:
+        with brk:
             raise RuntimeError("Boom")
     except RuntimeError:
         pass
@@ -162,11 +162,11 @@ async def test_circuitbreaker_raise_state_changed_event(circuitbreaker):
 
 
 @pytest.mark.asyncio
-async def test_circuit_breaker_factory_global_exclude():
-    circuitbreaker = AsyncCircuitBreakerFactory(exclude=[ValueError])
+def test_circuit_breaker_factory_global_exclude():
+    circuitbreaker = SyncCircuitBreakerFactory(exclude=[ValueError])
 
     @circuitbreaker("my", threshold=1, exclude=[KeyError])
-    async def raise_error(typ_: str):
+    def raise_error(typ_: str):
         if typ_ == "value":
             raise ValueError(42)
         if typ_ == "key":
@@ -174,55 +174,55 @@ async def test_circuit_breaker_factory_global_exclude():
         raise RuntimeError("boom")
 
     try:
-        await raise_error("value")
+        raise_error("value")
     except ValueError:
         pass
 
-    assert (await circuitbreaker.get_breaker("my")).context.state == "closed"
-    assert (await circuitbreaker.get_breaker("my")).context._state.failure_count == 0
+    assert (circuitbreaker.get_breaker("my")).context.state == "closed"
+    assert (circuitbreaker.get_breaker("my")).context._state.failure_count == 0
 
     try:
-        await raise_error("key")
+        raise_error("key")
     except KeyError:
         pass
 
-    assert (await circuitbreaker.get_breaker("my")).context.state == "closed"
-    assert (await circuitbreaker.get_breaker("my")).context._state.failure_count == 0
+    assert (circuitbreaker.get_breaker("my")).context.state == "closed"
+    assert (circuitbreaker.get_breaker("my")).context._state.failure_count == 0
 
     try:
-        await raise_error("runtime")
+        raise_error("runtime")
     except RuntimeError:
         pass
 
-    assert (await circuitbreaker.get_breaker("my")).context.state == "opened"
+    assert (circuitbreaker.get_breaker("my")).context.state == "opened"
 
 
 @pytest.mark.asyncio
-async def test_circuitbreaker_factory_add_listener():
+def test_circuitbreaker_factory_add_listener():
 
     evts = []
 
     def hook(name, evt_name, evt):
         evts.append((name, evt_name, evt))
 
-    circuitbreaker = AsyncCircuitBreakerFactory(default_threshold=2, default_ttl=0.1)
+    circuitbreaker = SyncCircuitBreakerFactory(default_threshold=2, default_ttl=0.1)
     circuitbreaker.add_listener(hook)
 
-    brk = await circuitbreaker.get_breaker("my")
-    brk2 = await circuitbreaker.get_breaker("my2")
+    brk = circuitbreaker.get_breaker("my")
+    brk2 = circuitbreaker.get_breaker("my2")
 
-    async def boom():
+    def boom():
         try:
-            async with brk:
+            with brk:
                 raise RuntimeError("Boom")
         except RuntimeError:
             pass
 
-    await boom()
-    async with brk2:
+    boom()
+    with brk2:
         pass
 
-    await boom()
+    boom()
 
     assert evts == [
         (
@@ -246,8 +246,8 @@ async def test_circuitbreaker_factory_add_listener():
     ]
 
     evts.clear()
-    await AsyncSleep(0.11)
-    await boom()
+    SyncSleep(0.11)
+    boom()
     assert evts == [
         (
             "my",
@@ -264,8 +264,8 @@ async def test_circuitbreaker_factory_add_listener():
     ]
     evts.clear()
 
-    await AsyncSleep(0.11)
-    async with brk:
+    SyncSleep(0.11)
+    with brk:
         pass
 
     assert evts == [
@@ -284,7 +284,7 @@ async def test_circuitbreaker_factory_add_listener():
 
 
 @pytest.mark.asyncio
-async def test_circuitbreaker_factory_remove_listener():
+def test_circuitbreaker_factory_remove_listener():
 
     evts = []
 
@@ -298,13 +298,13 @@ async def test_circuitbreaker_factory_remove_listener():
     hook = Hook()
     hook2 = Hook()
 
-    circuitbreaker = AsyncCircuitBreakerFactory(default_threshold=2, default_ttl=0.1)
+    circuitbreaker = SyncCircuitBreakerFactory(default_threshold=2, default_ttl=0.1)
     with pytest.raises(RuntimeError) as ctx:
         circuitbreaker.remove_listener(hook)
     assert str(ctx.value) == f"<hook> is not listening {circuitbreaker}"
 
     circuitbreaker.add_listener(hook)
-    await circuitbreaker.get_breaker("my")
+    circuitbreaker.get_breaker("my")
     assert evts == [
         (
             "my",
@@ -318,6 +318,6 @@ async def test_circuitbreaker_factory_remove_listener():
     circuitbreaker.remove_listener(hook)
     assert len(circuitbreaker.listeners) == 1
     circuitbreaker.remove_listener(hook2)
-    await circuitbreaker.get_breaker("my2")
+    circuitbreaker.get_breaker("my2")
     assert evts == []
     assert circuitbreaker.listeners == {}

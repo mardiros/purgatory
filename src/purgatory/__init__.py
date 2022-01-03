@@ -20,6 +20,12 @@ from purgatory.service._async.unit_of_work import (
     AsyncInMemoryUnitOfWork,
     AsyncRedisUnitOfWork,
 )
+from purgatory.service._sync.circuitbreaker import SyncCircuitBreakerFactory
+from purgatory.service._sync.unit_of_work import (
+    SyncAbstractUnitOfWork,
+    SyncInMemoryUnitOfWork,
+    SyncRedisUnitOfWork,
+)
 
 __all__ = [
     "AsyncAbstractUnitOfWork",
@@ -31,4 +37,8 @@ __all__ = [
     "CircuitBreakerRecovered",
     "ContextChanged",
     "Event",
+    "SyncCircuitBreakerFactory",
+    "SyncAbstractUnitOfWork",
+    "SyncInMemoryUnitOfWork",
+    "SyncRedisUnitOfWork",
 ]

@@ -6,11 +6,11 @@ from purgatory.domain.messages.events import (
     ContextChanged,
 )
 from purgatory.domain.model import Context
-from purgatory.service._async.unit_of_work import AsyncAbstractUnitOfWork
+from purgatory.service._sync.unit_of_work import SyncAbstractUnitOfWork
 
 
-async def register_circuit_breaker(
-    cmd: CreateCircuitBreaker, uow: AsyncAbstractUnitOfWork
+def register_circuit_breaker(
+    cmd: CreateCircuitBreaker, uow: SyncAbstractUnitOfWork
 ) -> Context:
     """
     Register circuit breaker in the repository
@@ -18,41 +18,41 @@ async def register_circuit_breaker(
     when receiving the CreateCircuitBreaker command.
     """
     ret = Context(cmd.name, cmd.threshold, cmd.ttl)
-    await uow.contexts.register(ret)
+    uow.contexts.register(ret)
     uow.contexts.messages.append(
         CircuitBreakerCreated(cmd.name, cmd.threshold, cmd.ttl)
     )
     return ret
 
 
-async def save_circuit_breaker_state(
-    evt: ContextChanged, uow: AsyncAbstractUnitOfWork
+def save_circuit_breaker_state(
+    evt: ContextChanged, uow: SyncAbstractUnitOfWork
 ) -> None:
     """
     Save the circuit breaker state in the repository
 
     when receiving the ContextChanged event.
     """
-    await uow.contexts.update_state(evt.name, evt.state, evt.opened_at)
+    uow.contexts.update_state(evt.name, evt.state, evt.opened_at)
 
 
-async def inc_circuit_breaker_failure(
-    evt: CircuitBreakerFailed, uow: AsyncAbstractUnitOfWork
+def inc_circuit_breaker_failure(
+    evt: CircuitBreakerFailed, uow: SyncAbstractUnitOfWork
 ) -> None:
     """
     Increment the number of failure in the repository
 
     when receiving the CircuitBreakerFailed event.
     """
-    await uow.contexts.inc_failures(evt.name, evt.failure_count)
+    uow.contexts.inc_failures(evt.name, evt.failure_count)
 
 
-async def reset_failure(
-    evt: CircuitBreakerRecovered, uow: AsyncAbstractUnitOfWork
+def reset_failure(
+    evt: CircuitBreakerRecovered, uow: SyncAbstractUnitOfWork
 ) -> None:
     """
     Reset the number of failure in the repository
 
     when receiving the CircuitBreakerRecovered event.
     """
-    await uow.contexts.reset_failure(evt.name)
+    uow.contexts.reset_failure(evt.name)

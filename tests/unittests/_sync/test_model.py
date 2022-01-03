@@ -6,7 +6,7 @@ from purgatory.domain.messages.events import (
     ContextChanged,
 )
 from purgatory.domain.model import ClosedState, Context, OpenedState
-from tests.unittests.time import AsyncSleep
+from tests.unittests.time import SyncSleep
 
 
 def test_circuitbreaker_open_raise():
@@ -23,7 +23,7 @@ def test_circuitbreaker_open_raise():
 
 
 @pytest.mark.asyncio
-async def test_circuitbreaker_open_closed_after_ttl_passed():
+def test_circuitbreaker_open_closed_after_ttl_passed():
     context = Context("my", threshold=5, ttl=0.1)
     state = OpenedState("my")
     context.set_state(state)
@@ -31,7 +31,7 @@ async def test_circuitbreaker_open_closed_after_ttl_passed():
         ContextChanged(name="my", state="opened", opened_at=state.opened_at),
     ]
     context.messages.clear()
-    await AsyncSleep(0.1)
+    SyncSleep(0.1)
 
     count = 0
     with context:
@@ -46,11 +46,11 @@ async def test_circuitbreaker_open_closed_after_ttl_passed():
 
 
 @pytest.mark.asyncio
-async def test_circuitbreaker_open_reopened_after_ttl_passed():
+def test_circuitbreaker_open_reopened_after_ttl_passed():
     context = Context("my", threshold=5, ttl=0.1)
     state = OpenedState("my")
     context.set_state(state)
-    await AsyncSleep(0.1)
+    SyncSleep(0.1)
 
     try:
         with context:

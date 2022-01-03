@@ -44,9 +44,9 @@ Example with a context manager
 
 ::
 
-   from purgatory import CircuitBreakerFactory
+   from purgatory import AsyncCircuitBreakerFactory
 
-   circuitbreaker = CircuitBreakerFactory()
+   circuitbreaker = AsyncCircuitBreakerFactory()
    async with await circuitbreaker.get_breaker("my_circuit"):
       ...
 
@@ -56,9 +56,9 @@ Example with a decorator
 
 ::
 
-   from purgatory import CircuitBreakerFactory
+   from purgatory import AsyncCircuitBreakerFactory
 
-   circuitbreaker = CircuitBreakerFactory()
+   circuitbreaker = AsyncCircuitBreakerFactory()
 
    @circuitbreaker("another circuit")
    async def function_that_may_fail():

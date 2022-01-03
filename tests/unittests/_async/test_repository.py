@@ -3,7 +3,10 @@ import time
 import pytest
 
 from purgatory.domain.model import Context
-from purgatory.service._async.repository import AsyncInMemoryRepository, AsyncRedisRepository
+from purgatory.service._async.repository import (
+    AsyncInMemoryRepository,
+    AsyncRedisRepository,
+)
 
 
 @pytest.mark.parametrize("repository", ["inmemory", "redis"])

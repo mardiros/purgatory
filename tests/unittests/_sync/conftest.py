@@ -3,23 +3,23 @@ from typing import Any, Optional, cast
 
 import pytest
 
-from purgatory import AsyncCircuitBreakerFactory
-from purgatory.service._async.messagebus import AsyncMessageRegistry
-from purgatory.service._async.repository import (
-    AsyncInMemoryRepository,
-    AsyncRedisRepository,
+from purgatory import SyncCircuitBreakerFactory
+from purgatory.service._sync.messagebus import SyncMessageRegistry
+from purgatory.service._sync.repository import (
+    SyncInMemoryRepository,
+    SyncRedisRepository,
 )
-from purgatory.service._async.unit_of_work import AsyncRedisUnitOfWork
+from purgatory.service._sync.unit_of_work import SyncRedisUnitOfWork
 
 
 @pytest.fixture()
 def circuitbreaker():
-    yield AsyncCircuitBreakerFactory()
+    yield SyncCircuitBreakerFactory()
 
 
 @pytest.fixture()
 def messagebus():
-    yield AsyncMessageRegistry()
+    yield SyncMessageRegistry()
 
 
 class FakeRedis:
@@ -34,21 +34,21 @@ class FakeRedis:
             for key, val in self.storage.items()
         }
 
-    async def initialize(self):
+    def initialize(self):
         self.initialized = True
         self.storage = {}
 
-    async def get(self, key) -> Optional[Any]:
+    def get(self, key) -> Optional[Any]:
         if not self.initialized:
             raise RuntimeError("Unititialized")
         return self.storage.get(key)
 
-    async def set(self, key, val):
+    def set(self, key, val):
         if not self.initialized:
             raise RuntimeError("Unititialized")
         self.storage[key] = val
 
-    async def incr(self, key):
+    def incr(self, key):
         if not self.initialized:
             raise RuntimeError("Unititialized")
         val = int(self.storage.get(key, 0)) + 1
@@ -62,23 +62,23 @@ def fake_redis():
 
 @pytest.fixture()
 def inmemory_repository():
-    return AsyncInMemoryRepository()
+    return SyncInMemoryRepository()
 
 
 @pytest.fixture()
 def redis_repository(fake_redis):
-    repo = AsyncRedisRepository("redis://localhost")
+    repo = SyncRedisRepository("redis://localhost")
     repo.redis = fake_redis
     yield repo
 
 
 @pytest.fixture()
 def redis_uow(fake_redis):
-    repo = AsyncRedisUnitOfWork("redis://localhost")
-    cast(AsyncRedisRepository, repo.contexts).redis = fake_redis
+    repo = SyncRedisUnitOfWork("redis://localhost")
+    cast(SyncRedisRepository, repo.contexts).redis = fake_redis
     yield repo
 
 
 @pytest.fixture()
 def circuitbreaker_redis(redis_uow):
-    yield AsyncCircuitBreakerFactory(uow=redis_uow)
+    yield SyncCircuitBreakerFactory(uow=redis_uow)

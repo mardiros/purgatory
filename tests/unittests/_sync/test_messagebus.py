@@ -1,11 +1,11 @@
 import pytest
 
-from purgatory.service._async.messagebus import ConfigurationError
-from purgatory.service._async.unit_of_work import AsyncInMemoryUnitOfWork
+from purgatory.service._sync.messagebus import ConfigurationError
+from purgatory.service._sync.unit_of_work import SyncInMemoryUnitOfWork
 from tests.unittests.dummy_models import DummyCommand, DummyEvent, DummyModel
 
 
-class FakeUnitOfWorkWithDummyEvents(AsyncInMemoryUnitOfWork):
+class FakeUnitOfWorkWithDummyEvents(SyncInMemoryUnitOfWork):
     def __init__(self):
         super().__init__()
         self.events = []
@@ -15,18 +15,18 @@ class FakeUnitOfWorkWithDummyEvents(AsyncInMemoryUnitOfWork):
             yield self.events.pop(0)
 
 
-async def listen_command(cmd: DummyCommand, uow: FakeUnitOfWorkWithDummyEvents):
+def listen_command(cmd: DummyCommand, uow: FakeUnitOfWorkWithDummyEvents):
     """This command raise an event played by the message bus."""
     uow.events.append(DummyEvent(id="", increment=10))
 
 
-async def listen_event(cmd: DummyEvent, uow):
+def listen_event(cmd: DummyEvent, uow):
     """This event is indented to be fire by the message bus."""
     DummyModel.counter += cmd.increment
 
 
 @pytest.mark.asyncio
-async def test_messagebus(messagebus):
+def test_messagebus(messagebus):
     """
     Test that the message bus is firing command and event.
 
@@ -36,15 +36,15 @@ async def test_messagebus(messagebus):
 
     DummyModel.counter = 0
     uow = FakeUnitOfWorkWithDummyEvents()
-    await listen_command(DummyCommand(id=""), uow)
+    listen_command(DummyCommand(id=""), uow)
     assert (
         DummyModel.counter == 0
     ), "Events raised cannot be played before the attach_listener has been called"
 
-    await listen_event(DummyEvent(id="", increment=1), uow)
+    listen_event(DummyEvent(id="", increment=1), uow)
     assert DummyModel.counter == 1
 
-    await messagebus.handle(DummyCommand(id=""), uow)
+    messagebus.handle(DummyCommand(id=""), uow)
     assert (
         DummyModel.counter == 1
     ), "The command cannot raise event before attach_listener"
@@ -53,7 +53,7 @@ async def test_messagebus(messagebus):
     messagebus.add_listener(DummyEvent, listen_event)
 
     uow = FakeUnitOfWorkWithDummyEvents()
-    await messagebus.handle(DummyCommand(id=""), uow)
+    messagebus.handle(DummyCommand(id=""), uow)
     assert DummyModel.counter == 11, (
         "The command should raise an event that is handle by the bus that "
         "will increment the model to 10"
@@ -62,25 +62,25 @@ async def test_messagebus(messagebus):
     messagebus.remove_listener(DummyEvent, listen_event)
 
     uow = FakeUnitOfWorkWithDummyEvents()
-    await messagebus.handle(DummyCommand(id=""), uow)
+    messagebus.handle(DummyCommand(id=""), uow)
     assert (
         DummyModel.counter == 11
     ), "The command should raise an event that is not handled anymore "
 
 
 @pytest.mark.asyncio
-async def test_messagebus_handle_only_message(messagebus):
+def test_messagebus_handle_only_message(messagebus):
     class Msg:
         def __repr__(self):
             return "<msg>"
 
     with pytest.raises(RuntimeError) as ctx:
-        await messagebus.handle(Msg(), FakeUnitOfWorkWithDummyEvents())
+        messagebus.handle(Msg(), FakeUnitOfWorkWithDummyEvents())
     assert str(ctx.value) == "<msg> was not an Event or Command"
 
 
 @pytest.mark.asyncio
-async def test_messagebus_cannot_register_handler_twice(messagebus):
+def test_messagebus_cannot_register_handler_twice(messagebus):
 
     messagebus.add_listener(DummyCommand, listen_command)
     with pytest.raises(ConfigurationError) as ctx:
@@ -94,7 +94,7 @@ async def test_messagebus_cannot_register_handler_twice(messagebus):
 
 
 @pytest.mark.asyncio
-async def test_messagebus_cannot_register_handler_on_non_message(messagebus):
+def test_messagebus_cannot_register_handler_on_non_message(messagebus):
     with pytest.raises(ConfigurationError) as ctx:
         messagebus.add_listener(object, listen_command)
     assert (
@@ -105,7 +105,7 @@ async def test_messagebus_cannot_register_handler_on_non_message(messagebus):
 
 
 @pytest.mark.asyncio
-async def test_messagebus_cannot_unregister_non_unregistered_handler(messagebus):
+def test_messagebus_cannot_unregister_non_unregistered_handler(messagebus):
     with pytest.raises(ConfigurationError) as ctx:
         messagebus.remove_listener(DummyCommand, listen_command)
     assert (

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+
 from purgatory.domain.messages import Command, Event
 
 

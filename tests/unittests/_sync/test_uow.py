@@ -1,41 +1,41 @@
 import pytest
 
 from purgatory.domain.messages.base import Message
-from purgatory.service._async.repository import AsyncInMemoryRepository
-from purgatory.service._async.unit_of_work import (
-    AsyncAbstractUnitOfWork,
-    AsyncInMemoryUnitOfWork,
+from purgatory.service._sync.repository import SyncInMemoryRepository
+from purgatory.service._sync.unit_of_work import (
+    SyncAbstractUnitOfWork,
+    SyncInMemoryUnitOfWork,
 )
 
 
-class TrackableUnitOfWork(AsyncAbstractUnitOfWork):
+class TrackableUnitOfWork(SyncAbstractUnitOfWork):
     def __init__(self) -> None:
         super().__init__()
         self.commited = False
         self.rollbacked = False
-        self.contexts = AsyncInMemoryRepository()
+        self.contexts = SyncInMemoryRepository()
 
-    async def commit(self):
+    def commit(self):
         self.commited = True
 
-    async def rollback(self):
+    def rollback(self):
         self.rollbacked = True
 
 
 @pytest.mark.asyncio
-async def test_commit_is_explicit():
+def test_commit_is_explicit():
     uow = TrackableUnitOfWork()
-    async with uow:
+    with uow:
         pass
     assert uow.commited is False
     assert uow.rollbacked is False
 
 
 @pytest.mark.asyncio
-async def test_rollack_is_implicit():
+def test_rollack_is_implicit():
     uow = TrackableUnitOfWork()
     try:
-        async with uow:
+        with uow:
             raise RuntimeError("Boom")
     except RuntimeError:
         pass
@@ -44,8 +44,8 @@ async def test_rollack_is_implicit():
 
 
 @pytest.mark.asyncio
-async def test_uow_is_collecting_events():
-    uow = AsyncInMemoryUnitOfWork()
+def test_uow_is_collecting_events():
+    uow = SyncInMemoryUnitOfWork()
     a = Message()
     b = Message()
     c = Message()
