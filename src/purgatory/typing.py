@@ -2,7 +2,6 @@ from typing import Callable
 
 from purgatory.domain.messages.base import Event
 
-
 CircuitName = str
 TTL = float
 Threshold = int

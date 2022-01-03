@@ -11,23 +11,23 @@ class ConfigurationError(RuntimeError):
     pass
 
 
-class AbstractRepository(abc.ABC):
+class SyncAbstractRepository(abc.ABC):
 
     messages: List[Message]
 
-    async def initialize(self):
-        """Override to initialize the repository asynchronously"""
+    def initialize(self):
+        "Keep for compat with the async version."
 
     @abc.abstractmethod
-    async def get(self, name: CircuitName) -> Optional[Context]:
+    def get(self, name: CircuitName) -> Optional[Context]:
         """Load breakers from the repository."""
 
     @abc.abstractmethod
-    async def register(self, context: Context):
+    def register(self, context: Context):
         """Add a circuit breaker into the repository."""
 
     @abc.abstractmethod
-    async def update_state(
+    def update_state(
         self,
         name: str,
         state: str,
@@ -36,28 +36,28 @@ class AbstractRepository(abc.ABC):
         """Set the new state of the circuit breaker into the repository."""
 
     @abc.abstractmethod
-    async def inc_failures(self, name: str, failure_count: int):
+    def inc_failures(self, name: str, failure_count: int):
         """Increment the number of failure in the repository."""
 
     @abc.abstractmethod
-    async def reset_failure(self, name: str):
+    def reset_failure(self, name: str):
         """Reset the number of failure in the repository."""
 
 
-class InMemoryRepository(AbstractRepository):
+class SyncInMemoryRepository(SyncAbstractRepository):
     def __init__(self):
         self.breakers = {}
         self.messages = []
 
-    async def get(self, name: CircuitName) -> Optional[Context]:
+    def get(self, name: CircuitName) -> Optional[Context]:
         """Add a circuit breaker into the repository."""
         return self.breakers.get(name)
 
-    async def register(self, context: Context):
+    def register(self, context: Context):
         """Add a circuit breaker into the repository."""
         self.breakers[context.name] = context
 
-    async def update_state(
+    def update_state(
         self,
         name: str,
         state: str,
@@ -65,39 +65,36 @@ class InMemoryRepository(AbstractRepository):
     ):
         """Because the get method return the object directly, nothing to do here."""
 
-    async def inc_failures(self, name: str, failure_count: int):
+    def inc_failures(self, name: str, failure_count: int):
         """Because the get method return the object directly, nothing to do here."""
 
-    async def reset_failure(self, name: str):
+    def reset_failure(self, name: str):
         """Reset the number of failure in the repository."""
 
 
-class RedisRepository(AbstractRepository):
+class SyncRedisRepository(SyncAbstractRepository):
     def __init__(self, url: str):
         try:
-            import aioredis
+            import redis
         except ImportError:
             raise ConfigurationError("redis extra dependencies not installed.")
-        self.redis = aioredis.from_url(url)
+        self.redis = redis.from_url(url)
         self.messages = []
         self.prefix = "cbr::"
 
-    async def initialize(self):
-        await self.redis.initialize()
-
-    async def get(self, name: CircuitName) -> Optional[Context]:
+    def get(self, name: CircuitName) -> Optional[Context]:
         """Add a circuit breaker into the repository."""
-        data = await self.redis.get(f"{self.prefix}{name}")
+        data = self.redis.get(f"{self.prefix}{name}")
         if not data:
             return None
         breaker = json.loads(data)
-        failure_count = await self.redis.get(f"{self.prefix}{name}::failure_count")
+        failure_count = self.redis.get(f"{self.prefix}{name}::failure_count")
         if failure_count:
             breaker["failure_count"] = int(failure_count)
         cbreaker = Context(**breaker)
         return cbreaker
 
-    async def register(self, context: Context):
+    def register(self, context: Context):
         """Add a circuit breaker into the repository."""
         data = json.dumps(
             {
@@ -108,25 +105,25 @@ class RedisRepository(AbstractRepository):
                 "opened_at": context.opened_at,
             }
         )
-        await self.redis.set(f"{self.prefix}{context.name}", data)
+        self.redis.set(f"{self.prefix}{context.name}", data)
 
-    async def update_state(
+    def update_state(
         self,
         name: str,
         state: str,
         opened_at: Optional[float],
     ):
         """Store the new state in the repository."""
-        data = await self.redis.get(f"{self.prefix}{name}")
-        breaker = json.loads(data)
+        data = self.redis.get(f"{self.prefix}{name}")
+        breaker = json.loads(data) if data else {}
         breaker["state"] = state
         breaker["opened_at"] = opened_at
-        await self.redis.set(f"{self.prefix}{name}", json.dumps(breaker))
+        self.redis.set(f"{self.prefix}{name}", json.dumps(breaker))
 
-    async def inc_failures(self, name: str, failure_count: int):
+    def inc_failures(self, name: str, failure_count: int):
         """Store the new state in the repository."""
-        await self.redis.incr(f"{self.prefix}{name}::failure_count")
+        self.redis.incr(f"{self.prefix}{name}::failure_count")
 
-    async def reset_failure(self, name: str):
+    def reset_failure(self, name: str):
         """Reset the number of failure in the repository."""
-        await self.redis.set(f"{self.prefix}{name}::failure_count", "0")
+        self.redis.set(f"{self.prefix}{name}::failure_count", "0")
