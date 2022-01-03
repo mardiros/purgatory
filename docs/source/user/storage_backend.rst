@@ -12,9 +12,9 @@ To choose a storage backend, the unit of work has to be configured.
 ::
 
    import httpx
-   from purgatory import RedisUnitOfWork
+   from purgatory import AsyncRedisUnitOfWork
    
-   circuit_breaker = CircuitBreakerFactory(
+   circuit_breaker = AsyncCircuitBreakerFactory(
       default_threshold=threshold,
       default_ttl=ttl,
       exclude=[
@@ -28,5 +28,5 @@ To choose a storage backend, the unit of work has to be configured.
 
 .. important::
 
-   When using the RedisUnitOfWork, the coroutine ``initialize`` must
+   When using the AsyncRedisUnitOfWork, the coroutine ``initialize`` must
    be called to initialize the redis connection.

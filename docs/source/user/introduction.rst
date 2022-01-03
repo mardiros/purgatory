@@ -16,9 +16,9 @@ Example of a circuit breaker that is used with the `httpx`_ library:
 ::
 
    import httpx
-   from purgatory import CircuitBreakerFactory
+   from purgatory import AsyncCircuitBreakerFactory
 
-   circuitbreaker = CircuitBreakerFactory(
+   circuitbreaker = AsyncCircuitBreakerFactory(
       default_threshold=5,
       default_ttl=30,
       exclude=[

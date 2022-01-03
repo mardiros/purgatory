@@ -10,12 +10,11 @@ from purgatory.domain.messages.events import (
     ContextChanged,
 )
 from purgatory.domain.model import Context
-from purgatory.service.circuitbreaker import CircuitBreakerFactory
-from tests.unittests.conftest import FakeRedis
+from purgatory.service._async.circuitbreaker import AsyncCircuitBreakerFactory
 
 
 @pytest.mark.asyncio
-async def test_circuitbreaker_factory_decorator(circuitbreaker: CircuitBreakerFactory):
+async def test_circuitbreaker_factory_decorator(circuitbreaker: AsyncCircuitBreakerFactory):
 
     count = 0
 
@@ -55,7 +54,7 @@ async def test_circuitbreaker_factory_decorator(circuitbreaker: CircuitBreakerFa
 
 @pytest.mark.asyncio
 async def test_redis_circuitbreaker_factory_decorator(
-    fake_redis: FakeRedis, circuitbreaker_redis: CircuitBreakerFactory
+    fake_redis, circuitbreaker_redis: AsyncCircuitBreakerFactory
 ):
 
     count = 0
@@ -106,8 +105,8 @@ async def test_redis_circuitbreaker_factory_decorator(
 async def test_circuitbreaker_factory_get_breaker(
     uow,
     cbr,
-    circuitbreaker: CircuitBreakerFactory,
-    circuitbreaker_redis: CircuitBreakerFactory,
+    circuitbreaker: AsyncCircuitBreakerFactory,
+    circuitbreaker_redis: AsyncCircuitBreakerFactory,
 ):
     cbreaker = {"inmemory": circuitbreaker, "redis": circuitbreaker_redis}[uow]
     await cbreaker.initialize()
@@ -162,7 +161,7 @@ async def test_circuitbreaker_raise_state_changed_event(circuitbreaker):
 
 @pytest.mark.asyncio
 async def test_circuit_breaker_factory_global_exclude():
-    circuitbreaker = CircuitBreakerFactory(exclude=[ValueError])
+    circuitbreaker = AsyncCircuitBreakerFactory(exclude=[ValueError])
 
     @circuitbreaker("my", threshold=1, exclude=[KeyError])
     async def raise_error(typ_: str):
@@ -204,7 +203,7 @@ async def test_circuitbreaker_factory_add_listener():
     def hook(name, evt_name, evt):
         evts.append((name, evt_name, evt))
 
-    circuitbreaker = CircuitBreakerFactory(default_threshold=2, default_ttl=0.1)
+    circuitbreaker = AsyncCircuitBreakerFactory(default_threshold=2, default_ttl=0.1)
     circuitbreaker.add_listener(hook)
 
     brk = await circuitbreaker.get_breaker("my")
@@ -297,7 +296,7 @@ async def test_circuitbreaker_factory_remove_listener():
     hook = Hook()
     hook2 = Hook()
 
-    circuitbreaker = CircuitBreakerFactory(default_threshold=2, default_ttl=0.1)
+    circuitbreaker = AsyncCircuitBreakerFactory(default_threshold=2, default_ttl=0.1)
     with pytest.raises(RuntimeError) as ctx:
         circuitbreaker.remove_listener(hook)
     assert str(ctx.value) == f"<hook> is not listening {circuitbreaker}"

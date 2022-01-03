@@ -3,28 +3,12 @@ from dataclasses import dataclass
 import pytest
 
 from purgatory.domain.messages import Command, Event
-from purgatory.service.messagebus import ConfigurationError
-from purgatory.service.unit_of_work import InMemoryUnitOfWork
+from purgatory.service._async.messagebus import ConfigurationError
+from purgatory.service._async.unit_of_work import AsyncInMemoryUnitOfWork
+from tests.unittests.dummy_models import DummyEvent, DummyCommand, DummyModel
 
 
-class DummyModel:
-    """A dummy model that will be updated using an event."""
-
-    counter = 0
-
-
-@dataclass
-class DummyCommand(Command):
-    id: str
-
-
-@dataclass
-class DummyEvent(Event):
-    id: str
-    increment: int
-
-
-class FakeUnitOfWorkWithDummyEvents(InMemoryUnitOfWork):
+class FakeUnitOfWorkWithDummyEvents(AsyncInMemoryUnitOfWork):
     def __init__(self):
         super().__init__()
         self.events = []
@@ -106,7 +90,7 @@ async def test_messagebus_cannot_register_handler_twice(messagebus):
         messagebus.add_listener(DummyCommand, listen_command)
     assert (
         str(ctx.value)
-        == "<class 'tests.unittests.test_messagebus.DummyCommand'> command "
+        == "<class 'tests.unittests.dummy_models.DummyCommand'> command "
         "has been registered twice"
     )
     messagebus.remove_listener(DummyCommand, listen_command)
@@ -130,7 +114,7 @@ async def test_messagebus_cannot_unregister_non_unregistered_handler(messagebus)
         messagebus.remove_listener(DummyCommand, listen_command)
     assert (
         str(ctx.value)
-        == "<class 'tests.unittests.test_messagebus.DummyCommand'> command "
+        == "<class 'tests.unittests.dummy_models.DummyCommand'> command "
         "has not been registered"
     )
 
@@ -138,7 +122,7 @@ async def test_messagebus_cannot_unregister_non_unregistered_handler(messagebus)
         messagebus.remove_listener(DummyEvent, listen_event)
 
     assert (
-        str(ctx.value) == "<class 'tests.unittests.test_messagebus.DummyEvent'> event "
+        str(ctx.value) == "<class 'tests.unittests.dummy_models.DummyEvent'> event "
         "has not been registered"
     )
 

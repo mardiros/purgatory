@@ -17,7 +17,7 @@ class ConfigurationError(RuntimeError):
     """Prevents bad usage of the add_listener."""
 
 
-class MessageRegistry(object):
+class AsyncMessageRegistry(object):
     """Store all the handlers for commands an events."""
 
     def __init__(self):
@@ -56,7 +56,7 @@ class MessageRegistry(object):
             )
 
     async def handle(
-        self, message: Message, uow: unit_of_work.AbstractUnitOfWork
+        self, message: Message, uow: unit_of_work.AsyncAbstractUnitOfWork
     ) -> Any:
         """
         Notify listener of that event registered with `messagebus.add_listener`.

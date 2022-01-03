@@ -14,21 +14,21 @@ from purgatory.domain.messages.events import (
     CircuitBreakerRecovered,
     ContextChanged,
 )
-from purgatory.service.circuitbreaker import CircuitBreakerFactory
-from purgatory.service.unit_of_work import (
-    AbstractUnitOfWork,
-    InMemoryUnitOfWork,
-    RedisUnitOfWork,
+from purgatory.service._async.circuitbreaker import AsyncCircuitBreakerFactory
+from purgatory.service._async.unit_of_work import (
+    AsyncAbstractUnitOfWork,
+    AsyncInMemoryUnitOfWork,
+    AsyncRedisUnitOfWork,
 )
 
 __all__ = [
-    "CircuitBreakerFactory",
-    "Event",
+    "AsyncAbstractUnitOfWork",
+    "AsyncCircuitBreakerFactory",
+    "AsyncInMemoryUnitOfWork",
+    "AsyncRedisUnitOfWork",
     "CircuitBreakerCreated",
-    "ContextChanged",
     "CircuitBreakerFailed",
     "CircuitBreakerRecovered",
-    "AbstractUnitOfWork",
-    "InMemoryUnitOfWork",
-    "RedisUnitOfWork",
+    "ContextChanged",
+    "Event",
 ]

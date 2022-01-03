@@ -3,20 +3,20 @@ from typing import Any, Optional, cast
 
 import pytest
 
-from purgatory import CircuitBreakerFactory
-from purgatory.service.messagebus import MessageRegistry
-from purgatory.service.repository import InMemoryRepository, RedisRepository
-from purgatory.service.unit_of_work import RedisUnitOfWork
+from purgatory import AsyncCircuitBreakerFactory
+from purgatory.service._async.messagebus import AsyncMessageRegistry
+from purgatory.service._async.repository import AsyncInMemoryRepository, AsyncRedisRepository
+from purgatory.service._async.unit_of_work import AsyncRedisUnitOfWork
 
 
 @pytest.fixture()
 def circuitbreaker():
-    yield CircuitBreakerFactory()
+    yield AsyncCircuitBreakerFactory()
 
 
 @pytest.fixture()
 def messagebus():
-    yield MessageRegistry()
+    yield AsyncMessageRegistry()
 
 
 class FakeRedis:
@@ -59,23 +59,23 @@ def fake_redis():
 
 @pytest.fixture()
 def inmemory_repository():
-    return InMemoryRepository()
+    return AsyncInMemoryRepository()
 
 
 @pytest.fixture()
 def redis_repository(fake_redis):
-    repo = RedisRepository("redis://localhost")
+    repo = AsyncRedisRepository("redis://localhost")
     repo.redis = fake_redis
     yield repo
 
 
 @pytest.fixture()
 def redis_uow(fake_redis):
-    repo = RedisUnitOfWork("redis://localhost")
-    cast(RedisRepository, repo.contexts).redis = fake_redis
+    repo = AsyncRedisUnitOfWork("redis://localhost")
+    cast(AsyncRedisRepository, repo.contexts).redis = fake_redis
     yield repo
 
 
 @pytest.fixture()
 def circuitbreaker_redis(redis_uow):
-    yield CircuitBreakerFactory(uow=redis_uow)
+    yield AsyncCircuitBreakerFactory(uow=redis_uow)
