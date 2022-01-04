@@ -12,6 +12,15 @@ To choose a storage backend, the unit of work has to be configured.
 Using asynchronous API
 ----------------------
 
+.. important::
+
+   Extra dependency ``aioredis`` is required. can be installed using
+
+   ::
+
+      pip install "purgatory-circuitbreaker[aioredis]"
+
+
 ::
 
    import httpx
@@ -31,6 +40,16 @@ Using asynchronous API
 
 Using synchronous API
 ---------------------
+
+
+.. important::
+
+   Extra dependency ``redis`` is required. can be installed using
+
+   ::
+
+      pip install "purgatory-circuitbreaker[redis]"
+
 
 ::
 
