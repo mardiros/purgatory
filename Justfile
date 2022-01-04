@@ -17,6 +17,9 @@ gensync:
 
 test: gensync unittest lint
 
+build: test
+    poetry build
+
 lf:
     poetry run pytest -sxvvv --lf
 
