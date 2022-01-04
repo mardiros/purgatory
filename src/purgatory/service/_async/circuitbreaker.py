@@ -10,26 +10,32 @@ from purgatory.domain.messages.events import (
     ContextChanged,
 )
 from purgatory.domain.model import Context, ExcludeType
-from purgatory.service.handlers import register_circuit_breaker
-from purgatory.service.handlers.circuitbreaker import (
+from purgatory.service._async.message_handlers import (
     inc_circuit_breaker_failure,
+    register_circuit_breaker,
     reset_failure,
     save_circuit_breaker_state,
 )
-from purgatory.service.messagebus import MessageRegistry
-from purgatory.service.unit_of_work import AbstractUnitOfWork, InMemoryUnitOfWork
-from purgatory.typing import CircuitName, Hook, TTL, Threshold
+from purgatory.service._async.messagebus import AsyncMessageRegistry
+from purgatory.service._async.unit_of_work import (
+    AsyncAbstractUnitOfWork,
+    AsyncInMemoryUnitOfWork,
+)
+from purgatory.typing import TTL, CircuitName, Hook, Threshold
 
 
-class CircuitBreaker:
+class AsyncCircuitBreaker:
     def __init__(
-        self, context: Context, uow: AbstractUnitOfWork, messagebus: MessageRegistry
+        self,
+        context: Context,
+        uow: AsyncAbstractUnitOfWork,
+        messagebus: AsyncMessageRegistry,
     ) -> None:
         self.context = context
         self.uow = uow
         self.messagebus = messagebus
 
-    async def __aenter__(self) -> "CircuitBreaker":
+    async def __aenter__(self) -> "AsyncCircuitBreaker":
         self.context.__enter__()
         return self
 
@@ -48,49 +54,53 @@ class CircuitBreaker:
 
 
 class PublicEvent:
-    def __init__(
-        self, messagebus: MessageRegistry, hook: Hook
-    ) -> None:
+    def __init__(self, messagebus: AsyncMessageRegistry, hook: Hook) -> None:
         messagebus.add_listener(CircuitBreakerCreated, self.cb_created)
         messagebus.add_listener(ContextChanged, self.cb_state_changed)
         messagebus.add_listener(CircuitBreakerFailed, self.cb_failed)
         messagebus.add_listener(CircuitBreakerRecovered, self.cb_recovered)
         self.hook = hook
 
-    def remove_listeners(self, messagebus: MessageRegistry) -> None:
+    def remove_listeners(self, messagebus: AsyncMessageRegistry) -> None:
         messagebus.remove_listener(CircuitBreakerCreated, self.cb_created)
         messagebus.remove_listener(ContextChanged, self.cb_state_changed)
         messagebus.remove_listener(CircuitBreakerFailed, self.cb_failed)
         messagebus.remove_listener(CircuitBreakerRecovered, self.cb_recovered)
 
-    async def cb_created(self, event: CircuitBreakerCreated, uow: AbstractUnitOfWork):
+    async def cb_created(
+        self, event: CircuitBreakerCreated, uow: AsyncAbstractUnitOfWork
+    ):
         self.hook(event.name, "circuit_breaker_created", event)
 
     async def cb_state_changed(
-        self, event: CircuitBreakerCreated, uow: AbstractUnitOfWork
+        self, event: CircuitBreakerCreated, uow: AsyncAbstractUnitOfWork
     ):
         self.hook(event.name, "state_changed", event)
 
-    async def cb_failed(self, event: CircuitBreakerCreated, uow: AbstractUnitOfWork):
+    async def cb_failed(
+        self, event: CircuitBreakerCreated, uow: AsyncAbstractUnitOfWork
+    ):
         self.hook(event.name, "failed", event)
 
-    async def cb_recovered(self, event: CircuitBreakerCreated, uow: AbstractUnitOfWork):
+    async def cb_recovered(
+        self, event: CircuitBreakerCreated, uow: AsyncAbstractUnitOfWork
+    ):
         self.hook(event.name, "recovered", event)
 
 
-class CircuitBreakerFactory:
+class AsyncCircuitBreakerFactory:
     def __init__(
         self,
         default_threshold: Threshold = 5,
         default_ttl: TTL = 30,
         exclude: ExcludeType = None,
-        uow: Optional[AbstractUnitOfWork] = None,
+        uow: Optional[AsyncAbstractUnitOfWork] = None,
     ):
         self.default_threshold = default_threshold
         self.default_ttl = default_ttl
         self.global_exclude = exclude or []
-        self.uow = uow or InMemoryUnitOfWork()
-        self.messagebus = MessageRegistry()
+        self.uow = uow or AsyncInMemoryUnitOfWork()
+        self.messagebus = AsyncMessageRegistry()
         self.messagebus.add_listener(CreateCircuitBreaker, register_circuit_breaker)
         self.messagebus.add_listener(ContextChanged, save_circuit_breaker_state)
         self.messagebus.add_listener(CircuitBreakerFailed, inc_circuit_breaker_failure)
@@ -116,7 +126,7 @@ class CircuitBreakerFactory:
         threshold: Optional[Threshold] = None,
         ttl: Optional[TTL] = None,
         exclude: ExcludeType = None,
-    ) -> CircuitBreaker:
+    ) -> AsyncCircuitBreaker:
         async with self.uow as uow:
             brk = await uow.contexts.get(circuit)
         if brk is None:
@@ -128,7 +138,7 @@ class CircuitBreakerFactory:
                     self.uow,
                 )
         brk.exclude_list = (exclude or []) + self.global_exclude
-        return CircuitBreaker(brk, self.uow, self.messagebus)
+        return AsyncCircuitBreaker(brk, self.uow, self.messagebus)
 
     def __call__(
         self,

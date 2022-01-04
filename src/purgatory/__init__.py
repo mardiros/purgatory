@@ -7,29 +7,38 @@ except pkg_resources.DistributionNotFound:
     pass
 
 
-from purgatory.service.circuitbreaker import CircuitBreakerFactory
-from purgatory.service.unit_of_work import (
-    AbstractUnitOfWork,
-    InMemoryUnitOfWork,
-    RedisUnitOfWork,
-)
 from purgatory.domain.messages import Event
 from purgatory.domain.messages.events import (
     CircuitBreakerCreated,
-    ContextChanged,
     CircuitBreakerFailed,
     CircuitBreakerRecovered,
+    ContextChanged,
+)
+from purgatory.service._async.circuitbreaker import AsyncCircuitBreakerFactory
+from purgatory.service._async.unit_of_work import (
+    AsyncAbstractUnitOfWork,
+    AsyncInMemoryUnitOfWork,
+    AsyncRedisUnitOfWork,
+)
+from purgatory.service._sync.circuitbreaker import SyncCircuitBreakerFactory
+from purgatory.service._sync.unit_of_work import (
+    SyncAbstractUnitOfWork,
+    SyncInMemoryUnitOfWork,
+    SyncRedisUnitOfWork,
 )
 
-
 __all__ = [
-    "CircuitBreakerFactory",
-    "Event",
+    "AsyncAbstractUnitOfWork",
+    "AsyncCircuitBreakerFactory",
+    "AsyncInMemoryUnitOfWork",
+    "AsyncRedisUnitOfWork",
     "CircuitBreakerCreated",
-    "ContextChanged",
     "CircuitBreakerFailed",
     "CircuitBreakerRecovered",
-    "AbstractUnitOfWork",
-    "InMemoryUnitOfWork",
-    "RedisUnitOfWork",
+    "ContextChanged",
+    "Event",
+    "SyncCircuitBreakerFactory",
+    "SyncAbstractUnitOfWork",
+    "SyncInMemoryUnitOfWork",
+    "SyncRedisUnitOfWork",
 ]

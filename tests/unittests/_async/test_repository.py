@@ -3,7 +3,10 @@ import time
 import pytest
 
 from purgatory.domain.model import Context
-from purgatory.domain.repository import InMemoryRepository, RedisRepository
+from purgatory.service._async.repository import (
+    AsyncInMemoryRepository,
+    AsyncRedisRepository,
+)
 
 
 @pytest.mark.parametrize("repository", ["inmemory", "redis"])
@@ -12,8 +15,8 @@ from purgatory.domain.repository import InMemoryRepository, RedisRepository
 async def test_redis_respository_state_recovery(
     state,
     repository,
-    inmemory_repository: InMemoryRepository,
-    redis_repository: RedisRepository,
+    inmemory_repository: AsyncInMemoryRepository,
+    redis_repository: AsyncRedisRepository,
 ):
     repository = {"inmemory": inmemory_repository, "redis": redis_repository}[
         repository
@@ -31,8 +34,8 @@ async def test_redis_respository_workflow(
     repository,
     # the in memory repository works update its state in the model,
     # and does not affect the repository
-    # inmemory_repository: InMemoryRepository,
-    redis_repository: RedisRepository,
+    # inmemory_repository: AsyncInMemoryRepository,
+    redis_repository: AsyncRedisRepository,
 ):
     repository = {"redis": redis_repository}[repository]
 

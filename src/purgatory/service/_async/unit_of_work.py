@@ -6,15 +6,15 @@ from types import TracebackType
 from typing import Generator, Optional, Type
 
 from purgatory.domain.messages import Message
-from purgatory.domain.repository import (
-    AbstractRepository,
-    InMemoryRepository,
-    RedisRepository,
+from purgatory.service._async.repository import (
+    AsyncAbstractRepository,
+    AsyncInMemoryRepository,
+    AsyncRedisRepository,
 )
 
 
-class AbstractUnitOfWork(abc.ABC):
-    contexts: AbstractRepository
+class AsyncAbstractUnitOfWork(abc.ABC):
+    contexts: AsyncAbstractRepository
 
     def collect_new_events(self) -> Generator[Message, None, None]:
         while self.contexts.messages:
@@ -23,7 +23,7 @@ class AbstractUnitOfWork(abc.ABC):
     async def initialize(self):
         """Override to initialize  repositories."""
 
-    async def __aenter__(self) -> AbstractUnitOfWork:
+    async def __aenter__(self) -> AsyncAbstractUnitOfWork:
         return self
 
     async def __aexit__(
@@ -45,9 +45,9 @@ class AbstractUnitOfWork(abc.ABC):
         """Rollback the transation."""
 
 
-class InMemoryUnitOfWork(AbstractUnitOfWork):
+class AsyncInMemoryUnitOfWork(AsyncAbstractUnitOfWork):
     def __init__(self):
-        self.contexts = InMemoryRepository()
+        self.contexts = AsyncInMemoryRepository()
 
     async def commit(self):
         """Do nothing."""
@@ -56,9 +56,9 @@ class InMemoryUnitOfWork(AbstractUnitOfWork):
         """Do nothing."""
 
 
-class RedisUnitOfWork(AbstractUnitOfWork):
+class AsyncRedisUnitOfWork(AsyncAbstractUnitOfWork):
     def __init__(self, url: str):
-        self.contexts = RedisRepository(url)
+        self.contexts = AsyncRedisRepository(url)
 
     async def initialize(self):
         await self.contexts.initialize()

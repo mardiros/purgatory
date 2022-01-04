@@ -10,7 +10,12 @@ cleandoc:
 rtd:
     poetry export --dev -f requirements.txt -o docs/requirements.txt
 
-test: unittest lint
+gensync:
+    poetry run python scripts/gen_unasync.py
+    poetry run black src/purgatory/service/_sync/
+    poetry run black tests/unittests/_sync/
+
+test: gensync unittest lint
 
 lf:
     poetry run pytest -sxvvv --lf

@@ -11,7 +11,7 @@ class ConfigurationError(RuntimeError):
     pass
 
 
-class AbstractRepository(abc.ABC):
+class AsyncAbstractRepository(abc.ABC):
 
     messages: List[Message]
 
@@ -44,7 +44,7 @@ class AbstractRepository(abc.ABC):
         """Reset the number of failure in the repository."""
 
 
-class InMemoryRepository(AbstractRepository):
+class AsyncInMemoryRepository(AsyncAbstractRepository):
     def __init__(self):
         self.breakers = {}
         self.messages = []
@@ -72,7 +72,7 @@ class InMemoryRepository(AbstractRepository):
         """Reset the number of failure in the repository."""
 
 
-class RedisRepository(AbstractRepository):
+class AsyncRedisRepository(AsyncAbstractRepository):
     def __init__(self, url: str):
         try:
             import aioredis

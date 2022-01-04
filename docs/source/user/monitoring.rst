@@ -9,7 +9,7 @@ Here is an example of a hook that collect the state metrics of circuits.
 ::
 
    from prometheus_client import Counter, Gauge
-   from purgatory import CircuitBreakerFactory
+   from purgatory import AsyncCircuitBreakerFactory
 
 
    class GaugeStateValue:
@@ -48,5 +48,5 @@ Here is an example of a hook that collect the state metrics of circuits.
                ).inc()
 
 
-   circuitbreaker = CircuitBreakerFactory()
+   circuitbreaker = AsyncCircuitBreakerFactory()
    circuitbreaker.add_listener(PrometheusHook())
