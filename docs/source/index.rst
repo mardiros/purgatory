@@ -12,6 +12,7 @@
    user/introduction
    user/storage_backend
    user/monitoring
+   user/changelog
 
 .. toctree::
    :maxdepth: 2

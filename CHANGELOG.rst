@@ -1,8 +1,20 @@
-0.5.1 (2021-22-02)
+0.6.0 (2021-01-04)
+------------------
+* Refactor to get an asynchronous and a synchronous api.
+
+.. important ::
+
+  Breaking Change
+
+  Now the main class export ``CircuitBreakerFactory`` is now
+  ``AsyncCircuitBreakerFactory`` and there is a ``SyncCircuitBreakerFactory``
+  for synchronous consumers.
+
+0.5.1 (2021-01-02)
 ------------------
 * Add documentation
 
-0.5.0 (2021-22-01)
+0.5.0 (2021-01-01)
 ------------------
 * Refactor. Rename model and service.
 * Improve typing.
