@@ -55,9 +55,7 @@ class SyncMessageRegistry(object):
                 f"type {msg_type} should be a command or an event"
             )
 
-    def handle(
-        self, message: Message, uow: unit_of_work.SyncAbstractUnitOfWork
-    ) -> Any:
+    def handle(self, message: Message, uow: unit_of_work.SyncAbstractUnitOfWork) -> Any:
         """
         Notify listener of that event registered with `messagebus.add_listener`.
         Return the first event from the command.

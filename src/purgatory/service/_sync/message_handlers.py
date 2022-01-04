@@ -47,9 +47,7 @@ def inc_circuit_breaker_failure(
     uow.contexts.inc_failures(evt.name, evt.failure_count)
 
 
-def reset_failure(
-    evt: CircuitBreakerRecovered, uow: SyncAbstractUnitOfWork
-) -> None:
+def reset_failure(evt: CircuitBreakerRecovered, uow: SyncAbstractUnitOfWork) -> None:
     """
     Reset the number of failure in the repository
 

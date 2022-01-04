@@ -46,7 +46,6 @@ release = version
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
-    "sphinx.ext.autosectionlabel",
 ]
 
 autodoc_default_options = {

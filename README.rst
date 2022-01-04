@@ -33,14 +33,18 @@ the library aiobreaker was used but I encountered limitation so, I decide
 to build my own implementation that feet well with `blacksmith`_.
 
 
+.. _`blacksmith`: https://python-blacksmith.readthedocs.io/en/latest/
+
+
 Features
 --------
 
-Purgatory supports the creation of many circuitbreaker easily, and 
+Purgatory supports the creation of many circuit breakers easily, that 
 can be used as context manager or decorator.
+Circuit breaker can be asynchronous or synchronous.
 
-Example with a context manager
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Example with a context manager for an async API
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
@@ -65,15 +69,28 @@ Example with a decorator
       ...
 
 
+
+Example with a context manager for an synchronous API
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+::
+
+   from purgatory import SyncCircuitBreakerFactory
+
+   circuitbreaker = SyncCircuitBreakerFactory()
+   with circuitbreaker.get_breaker("my_circuit"):
+      ...
+
+
+Circuit breakers states and monitoring
+--------------------------------------
+
 The state of every circuits can be stored in memory, shared in redis, or
 be completly customized.
 
 It also support monitoring, using event hook.
 
 Purgatory is fully typed and fully tested.
-
-
-.. _`blacksmith`: https://python-blacksmith.readthedocs.io/en/latest/
 
 
 Read More

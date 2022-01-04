@@ -67,9 +67,7 @@ class PublicEvent:
         messagebus.remove_listener(CircuitBreakerFailed, self.cb_failed)
         messagebus.remove_listener(CircuitBreakerRecovered, self.cb_recovered)
 
-    def cb_created(
-        self, event: CircuitBreakerCreated, uow: SyncAbstractUnitOfWork
-    ):
+    def cb_created(self, event: CircuitBreakerCreated, uow: SyncAbstractUnitOfWork):
         self.hook(event.name, "circuit_breaker_created", event)
 
     def cb_state_changed(
@@ -77,14 +75,10 @@ class PublicEvent:
     ):
         self.hook(event.name, "state_changed", event)
 
-    def cb_failed(
-        self, event: CircuitBreakerCreated, uow: SyncAbstractUnitOfWork
-    ):
+    def cb_failed(self, event: CircuitBreakerCreated, uow: SyncAbstractUnitOfWork):
         self.hook(event.name, "failed", event)
 
-    def cb_recovered(
-        self, event: CircuitBreakerCreated, uow: SyncAbstractUnitOfWork
-    ):
+    def cb_recovered(self, event: CircuitBreakerCreated, uow: SyncAbstractUnitOfWork):
         self.hook(event.name, "recovered", event)
 
 
