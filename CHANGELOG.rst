@@ -1,3 +1,7 @@
+0.6.1 (2021-01-04)
+------------------
+* Bugfix. Add missing failure event when the threshod is attempt.
+
 0.6.0 (2021-01-04)
 ------------------
 * Refactor to get an asynchronous and a synchronous api.
