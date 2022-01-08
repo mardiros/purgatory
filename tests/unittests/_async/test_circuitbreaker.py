@@ -236,6 +236,7 @@ async def test_circuitbreaker_factory_add_listener():
             CircuitBreakerCreated(name="my2", threshold=2, ttl=0.1),
         ),
         ("my", "failed", CircuitBreakerFailed(name="my", failure_count=1)),
+        ("my", "failed", CircuitBreakerFailed(name="my", failure_count=2)),
         (
             "my",
             "state_changed",

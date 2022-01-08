@@ -189,11 +189,10 @@ class ClosedState(State):
 
     def handle_exception(self, context: Context, exc: BaseException):
         self.failure_count += 1
+        context.mark_failure(self.failure_count)
         if self.failure_count >= context.threshold:
             opened = OpenedState(context.name)
             context.set_state(opened)
-        else:
-            context.mark_failure(self.failure_count)
 
     def handle_end_request(self, context: Context):
         """Reset in case the request is ok"""

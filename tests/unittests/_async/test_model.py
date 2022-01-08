@@ -89,6 +89,7 @@ def test_circuitbreaker_closed_state_opening():
         pass
 
     assert context.messages == [
+        CircuitBreakerFailed(name="my", failure_count=2),
         ContextChanged(name="my", state="opened", opened_at=context.opened_at),
     ]
     state = OpenedState("my")
