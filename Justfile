@@ -15,7 +15,7 @@ gensync:
     poetry run black src/purgatory/service/_sync/
     poetry run black tests/unittests/_sync/
 
-test: gensync unittest lint
+test: gensync unittest lint mypy
 
 build: test
     poetry build
