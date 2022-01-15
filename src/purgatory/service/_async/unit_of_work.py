@@ -20,7 +20,7 @@ class AsyncAbstractUnitOfWork(abc.ABC):
         while self.contexts.messages:
             yield self.contexts.messages.pop(0)
 
-    async def initialize(self):
+    async def initialize(self) -> None:
         """Override to initialize  repositories."""
 
     async def __aenter__(self) -> AsyncAbstractUnitOfWork:
@@ -37,34 +37,34 @@ class AsyncAbstractUnitOfWork(abc.ABC):
             await self.rollback()
 
     @abc.abstractmethod
-    async def commit(self):
+    async def commit(self) -> None:
         """Commit the transation."""
 
     @abc.abstractmethod
-    async def rollback(self):
+    async def rollback(self) -> None:
         """Rollback the transation."""
 
 
 class AsyncInMemoryUnitOfWork(AsyncAbstractUnitOfWork):
-    def __init__(self):
+    def __init__(self) -> None:
         self.contexts = AsyncInMemoryRepository()
 
-    async def commit(self):
+    async def commit(self) -> None:
         """Do nothing."""
 
-    async def rollback(self):
+    async def rollback(self) -> None:
         """Do nothing."""
 
 
 class AsyncRedisUnitOfWork(AsyncAbstractUnitOfWork):
-    def __init__(self, url: str):
+    def __init__(self, url: str) -> None:
         self.contexts = AsyncRedisRepository(url)
 
-    async def initialize(self):
+    async def initialize(self) -> None:
         await self.contexts.initialize()
 
-    async def commit(self):
+    async def commit(self) -> None:
         """Do nothing."""
 
-    async def rollback(self):
+    async def rollback(self) -> None:
         """Do nothing."""

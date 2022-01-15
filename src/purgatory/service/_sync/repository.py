@@ -1,6 +1,6 @@
 import abc
 import json
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from purgatory.domain.messages.base import Message
 from purgatory.domain.model import Context
@@ -15,7 +15,7 @@ class SyncAbstractRepository(abc.ABC):
 
     messages: List[Message]
 
-    def initialize(self):
+    def initialize(self) -> None:
         """Override to initialize the repository asynchronously"""
 
     @abc.abstractmethod
@@ -23,7 +23,7 @@ class SyncAbstractRepository(abc.ABC):
         """Load breakers from the repository."""
 
     @abc.abstractmethod
-    def register(self, context: Context):
+    def register(self, context: Context) -> None:
         """Add a circuit breaker into the repository."""
 
     @abc.abstractmethod
@@ -32,28 +32,28 @@ class SyncAbstractRepository(abc.ABC):
         name: str,
         state: str,
         opened_at: Optional[float],
-    ):
+    ) -> None:
         """Sate the new staate of the circuit breaker into the repository."""
 
     @abc.abstractmethod
-    def inc_failures(self, name: str, failure_count: int):
+    def inc_failures(self, name: str, failure_count: int) -> None:
         """Increment the number of failure in the repository."""
 
     @abc.abstractmethod
-    def reset_failure(self, name: str):
+    def reset_failure(self, name: str) -> None:
         """Reset the number of failure in the repository."""
 
 
 class SyncInMemoryRepository(SyncAbstractRepository):
-    def __init__(self):
-        self.breakers = {}
-        self.messages = []
+    def __init__(self) -> None:
+        self.breakers: Dict[CircuitName, Context] = {}
+        self.messages: List[Message] = []
 
     def get(self, name: CircuitName) -> Optional[Context]:
         """Add a circuit breaker into the repository."""
         return self.breakers.get(name)
 
-    def register(self, context: Context):
+    def register(self, context: Context) -> None:
         """Add a circuit breaker into the repository."""
         self.breakers[context.name] = context
 
@@ -62,18 +62,18 @@ class SyncInMemoryRepository(SyncAbstractRepository):
         name: str,
         state: str,
         opened_at: Optional[float],
-    ):
+    ) -> None:
         """Because the get method return the object directly, nothing to do here."""
 
-    def inc_failures(self, name: str, failure_count: int):
+    def inc_failures(self, name: str, failure_count: int) -> None:
         """Because the get method return the object directly, nothing to do here."""
 
-    def reset_failure(self, name: str):
+    def reset_failure(self, name: str) -> None:
         """Reset the number of failure in the repository."""
 
 
 class SyncRedisRepository(SyncAbstractRepository):
-    def __init__(self, url: str):
+    def __init__(self, url: str) -> None:
         try:
             import redis
         except ImportError:
@@ -82,8 +82,8 @@ class SyncRedisRepository(SyncAbstractRepository):
         self.messages = []
         self.prefix = "cbr::"
 
-    def initialize(self):
-        self.redis.initialize()
+    def initialize(self) -> None:
+        self.redis.initialize()  # type: ignore
 
     def get(self, name: CircuitName) -> Optional[Context]:
         """Add a circuit breaker into the repository."""
@@ -97,7 +97,7 @@ class SyncRedisRepository(SyncAbstractRepository):
         cbreaker = Context(**breaker)
         return cbreaker
 
-    def register(self, context: Context):
+    def register(self, context: Context) -> None:
         """Add a circuit breaker into the repository."""
         data = json.dumps(
             {
@@ -115,7 +115,7 @@ class SyncRedisRepository(SyncAbstractRepository):
         name: str,
         state: str,
         opened_at: Optional[float],
-    ):
+    ) -> None:
         """Store the new state in the repository."""
         data = self.redis.get(f"{self.prefix}{name}")
         breaker = json.loads(data or "{}")
@@ -123,10 +123,10 @@ class SyncRedisRepository(SyncAbstractRepository):
         breaker["opened_at"] = opened_at
         self.redis.set(f"{self.prefix}{name}", json.dumps(breaker))
 
-    def inc_failures(self, name: str, failure_count: int):
+    def inc_failures(self, name: str, failure_count: int) -> None:
         """Store the new state in the repository."""
         self.redis.incr(f"{self.prefix}{name}::failure_count")
 
-    def reset_failure(self, name: str):
+    def reset_failure(self, name: str) -> None:
         """Reset the number of failure in the repository."""
         self.redis.set(f"{self.prefix}{name}::failure_count", "0")
