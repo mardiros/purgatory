@@ -18,6 +18,10 @@ packages = [
 readme = "README.rst"
 version = "0.7.0"
 
+[[tool.mypy.overrides]]
+module = "purgatory.*"
+disallow_untyped_defs = true
+
 [tool.poetry.dependencies]
 python = "^3.7"
 aioredis = {version = "^2.0.1", optional = true}
