@@ -33,6 +33,9 @@ black:
     poetry run isort .
     poetry run black .
 
+mypy:
+    poetry run mypy src/purgatory/
+
 cov test_suite=default_test_suite:
     rm -f .coverage
     rm -rf htmlcov
