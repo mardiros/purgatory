@@ -1,4 +1,5 @@
 import requests
+
 from purgatory import SyncCircuitBreakerFactory, SyncRedisUnitOfWork
 
 circuit_breaker = SyncCircuitBreakerFactory(

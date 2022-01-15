@@ -16,7 +16,7 @@ packages = [
   {include = "purgatory", from = "src"},
 ]
 readme = "README.rst"
-version = "0.6.0"
+version = "0.6.1"
 
 [tool.poetry.dependencies]
 python = "^3.7"
@@ -41,6 +41,10 @@ sphinx-rtd-theme = "^1.0.0"
 tomlkit = "^0.8.0"
 unasync = "^0.5.0"
 redis = "^4.1.0"
+mypy = "^0.931"
+typing-extensions = "^4.0.1"
+types-redis = "^4.1.8"
+types-setuptools = "^57.4.7"
 
 [tool.isort]
 profile = "black"
