@@ -155,7 +155,6 @@ class Context:
         )
 
 
-@dataclass
 class State(abc.ABC):
     failure_count: Optional[int] = None
     opened_at: Optional[float] = None
@@ -205,8 +204,8 @@ class ClosedState(State):
 class OpenedState(State, Exception):
     """In open state, reopen after a TTL."""
 
-    name: StateName = OPENED
     opened_at: float
+    name: StateName = OPENED
 
     def __init__(self, circuit_name: CircuitName) -> None:
         Exception.__init__(self, f"Circuit {circuit_name} is open")
@@ -220,14 +219,14 @@ class OpenedState(State, Exception):
             return context.handle_new_request()
         raise self
 
-    def handle_exception(self, exc: BaseException):
+    def handle_exception(self, context: Context, exc: BaseException):
         """
         When the circuit is opened, the OpenState is raised before entering.
 
         This function is never called.
         """
 
-    def handle_end_request(self):
+    def handle_end_request(self, context: Context):
         """
         When the circuit is opened, the OpenState is raised before entering.
 

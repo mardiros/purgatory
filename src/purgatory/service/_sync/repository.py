@@ -90,7 +90,7 @@ class SyncRedisRepository(SyncAbstractRepository):
         data = self.redis.get(f"{self.prefix}{name}")
         if not data:
             return None
-        breaker = json.loads(data)
+        breaker = json.loads(data or "{}")
         failure_count = self.redis.get(f"{self.prefix}{name}::failure_count")
         if failure_count:
             breaker["failure_count"] = int(failure_count)
@@ -118,7 +118,7 @@ class SyncRedisRepository(SyncAbstractRepository):
     ):
         """Store the new state in the repository."""
         data = self.redis.get(f"{self.prefix}{name}")
-        breaker = json.loads(data)
+        breaker = json.loads(data or "{}")
         breaker["state"] = state
         breaker["opened_at"] = opened_at
         self.redis.set(f"{self.prefix}{name}", json.dumps(breaker))
