@@ -1,8 +1,13 @@
-0.6.1 (2021-01-04)
+0.7.0 (2022-01-04)
+------------------
+* Add typing support. (PEP 561)
+* Validate typing with mypy
+
+0.6.1 (2022-01-04)
 ------------------
 * Bugfix. Add missing failure event when the threshod is attempt.
 
-0.6.0 (2021-01-04)
+0.6.0 (2022-01-04)
 ------------------
 * Refactor to get an asynchronous and a synchronous api.
 
@@ -14,11 +19,11 @@
   ``AsyncCircuitBreakerFactory`` and there is a ``SyncCircuitBreakerFactory``
   for synchronous consumers.
 
-0.5.1 (2021-01-02)
+0.5.1 (2022-01-02)
 ------------------
 * Add documentation
 
-0.5.0 (2021-01-01)
+0.5.0 (2022-01-01)
 ------------------
 * Refactor. Rename model and service.
 * Improve typing.
