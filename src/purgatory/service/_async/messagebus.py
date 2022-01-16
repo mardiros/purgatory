@@ -25,36 +25,44 @@ class AsyncMessageRegistry:
     """Store all the handlers for commands an events."""
 
     def __init__(self) -> None:
-        self.commands_registry: Dict[Type[Command], AsyncCommandHandler] = {}
-        self.events_registry: Dict[Type[Event], List[AsyncEventHandler]] = defaultdict(
-            list
-        )
+        self.commands_registry: Dict[Type[Command], AsyncCommandHandler[Command]] = {}
+        self.events_registry: Dict[
+            Type[Event], List[AsyncEventHandler[Event]]
+        ] = defaultdict(list)
 
     def add_listener(
-        self, msg_type: Type[Message], callback: AsyncMessageHandler
+        self, msg_type: Type[Message], callback: AsyncMessageHandler[Any, Any]
     ) -> None:
         if issubclass(msg_type, Command):
             if msg_type in self.commands_registry:
                 raise ConfigurationError(
                     f"{msg_type} command has been registered twice"
                 )
-            self.commands_registry[msg_type] = cast(AsyncCommandHandler, callback)
+            self.commands_registry[msg_type] = cast(
+                AsyncCommandHandler[Command], callback
+            )
         elif issubclass(msg_type, Event):
-            self.events_registry[msg_type].append(cast(AsyncEventHandler, callback))
+            self.events_registry[msg_type].append(
+                cast(AsyncEventHandler[Event], callback)
+            )
         else:
             raise ConfigurationError(
                 f"Invalid usage of the listen decorator: "
                 f"type {msg_type} should be a command or an event"
             )
 
-    def remove_listener(self, msg_type: type, callback: AsyncMessageHandler) -> None:
+    def remove_listener(
+        self, msg_type: type, callback: AsyncMessageHandler[Any, Any]
+    ) -> None:
         if issubclass(msg_type, Command):
             if msg_type not in self.commands_registry:
                 raise ConfigurationError(f"{msg_type} command has not been registered")
             del self.commands_registry[msg_type]
         elif issubclass(msg_type, Event):
             try:
-                self.events_registry[msg_type].remove(cast(AsyncEventHandler, callback))
+                self.events_registry[msg_type].remove(
+                    cast(AsyncEventHandler[Event], callback)
+                )
             except ValueError:
                 raise ConfigurationError(f"{msg_type} event has not been registered")
         else:

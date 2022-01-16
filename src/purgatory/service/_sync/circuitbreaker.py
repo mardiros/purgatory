@@ -147,7 +147,7 @@ class SyncCircuitBreakerFactory:
         ttl: Optional[TTL] = None,
         exclude: ExcludeType = None,
     ) -> Any:
-        def decorator(func: Callable) -> Callable:
+        def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
             @wraps(func)
             def inner_coro(*args: Any, **kwargs: Any) -> Any:
                 brk = self.get_breaker(circuit, threshold, ttl, exclude)

@@ -147,7 +147,7 @@ class AsyncCircuitBreakerFactory:
         ttl: Optional[TTL] = None,
         exclude: ExcludeType = None,
     ) -> Any:
-        def decorator(func: Callable) -> Callable:
+        def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
             @wraps(func)
             async def inner_coro(*args: Any, **kwargs: Any) -> Any:
                 brk = await self.get_breaker(circuit, threshold, ttl, exclude)

@@ -21,9 +21,9 @@ AsyncCommandHandler = Callable[
 AsyncEventHandler = Callable[
     [TEvent, AsyncAbstractUnitOfWork], Coroutine[Any, Any, None]
 ]
-AsyncMessageHandler = Union[AsyncCommandHandler, AsyncEventHandler]
+AsyncMessageHandler = Union[AsyncCommandHandler[TCommand], AsyncEventHandler[TEvent]]
 
 
 SyncCommandHandler = Callable[[TCommand, SyncAbstractUnitOfWork], Any]
 SyncEventHandler = Callable[[TEvent, SyncAbstractUnitOfWork], None]
-SyncMessageHandler = Union[SyncCommandHandler, SyncEventHandler]
+SyncMessageHandler = Union[SyncCommandHandler[TCommand], SyncEventHandler[TEvent]]
