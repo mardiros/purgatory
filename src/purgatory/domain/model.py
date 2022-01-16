@@ -43,7 +43,7 @@ class Context:
         name: CircuitName,
         threshold: Threshold,
         ttl: TTL,
-        state="closed",
+        state: StateName = "closed",
         failure_count: int = 0,
         opened_at: Optional[float] = None,
         exclude: ExcludeType = None,
@@ -65,7 +65,7 @@ class Context:
 
     @property
     def state(self) -> StateName:
-        return self._state.name
+        return cast(StateName, self._state.name)
 
     @property
     def opened_at(self) -> Optional[float]:
@@ -75,7 +75,7 @@ class Context:
     def failure_count(self) -> Optional[int]:
         return self._state.failure_count
 
-    def set_state(self, state: "State"):
+    def set_state(self, state: "State") -> None:
         self._state = state
         self.messages.append(
             ContextChanged(
@@ -85,7 +85,7 @@ class Context:
             )
         )
 
-    def mark_failure(self, failure_count):
+    def mark_failure(self, failure_count: int) -> None:
         self.messages.append(
             CircuitBreakerFailed(
                 self.name,
@@ -93,17 +93,17 @@ class Context:
             )
         )
 
-    def recover_failure(self):
+    def recover_failure(self) -> None:
         self.messages.append(
             CircuitBreakerRecovered(
                 self.name,
             )
         )
 
-    def handle_new_request(self):
+    def handle_new_request(self) -> None:
         self._state.handle_new_request(self)
 
-    def handle_exception(self, exc: BaseException):
+    def handle_exception(self, exc: BaseException) -> None:
         failed = True
         for exctype_func in self.exclude_list:
 
@@ -120,7 +120,7 @@ class Context:
         else:
             self._state.handle_end_request(self)
 
-    def handle_end_request(self):
+    def handle_end_request(self) -> None:
         self._state.handle_end_request(self)
 
     def __enter__(self) -> "Context":
@@ -161,15 +161,15 @@ class State(abc.ABC):
     name: str = ""
 
     @abc.abstractmethod
-    def handle_new_request(self, context: Context):
+    def handle_new_request(self, context: Context) -> None:
         """Handle new code block"""
 
     @abc.abstractmethod
-    def handle_exception(self, context: Context, exc: BaseException):
+    def handle_exception(self, context: Context, exc: BaseException) -> None:
         """Handle exception during the code block"""
 
     @abc.abstractmethod
-    def handle_end_request(self, context: Context):
+    def handle_end_request(self, context: Context) -> None:
         """Handle proper execution after the code block"""
 
 
@@ -183,17 +183,17 @@ class ClosedState(State):
     def __init__(self) -> None:
         self.failure_count = 0
 
-    def handle_new_request(self, context: Context):
+    def handle_new_request(self, context: Context) -> None:
         """When the circuit is closed, the new request has no incidence"""
 
-    def handle_exception(self, context: Context, exc: BaseException):
+    def handle_exception(self, context: Context, exc: BaseException) -> None:
         self.failure_count += 1
         context.mark_failure(self.failure_count)
         if self.failure_count >= context.threshold:
             opened = OpenedState(context.name)
             context.set_state(opened)
 
-    def handle_end_request(self, context: Context):
+    def handle_end_request(self, context: Context) -> None:
         """Reset in case the request is ok"""
         if self.failure_count > 0:
             context.recover_failure()
@@ -212,21 +212,21 @@ class OpenedState(State, Exception):
         self.opened_at = time.time()
         self.circuit_name = circuit_name
 
-    def handle_new_request(self, context: Context):
+    def handle_new_request(self, context: Context) -> None:
         closed_at = self.opened_at + context.ttl
         if time.time() > closed_at:
             context.set_state(HalfOpenedState())
             return context.handle_new_request()
         raise self
 
-    def handle_exception(self, context: Context, exc: BaseException):
+    def handle_exception(self, context: Context, exc: BaseException) -> None:
         """
         When the circuit is opened, the OpenState is raised before entering.
 
         This function is never called.
         """
 
-    def handle_end_request(self, context: Context):
+    def handle_end_request(self, context: Context) -> None:
         """
         When the circuit is opened, the OpenState is raised before entering.
 
@@ -240,15 +240,15 @@ class HalfOpenedState(State):
 
     name: StateName = HALF_OPENED
 
-    def handle_new_request(self, context: Context):
+    def handle_new_request(self, context: Context) -> None:
         """In half open state, we reset the failure counter to restart 0."""
 
-    def handle_exception(self, context: Context, exc: BaseException):
+    def handle_exception(self, context: Context, exc: BaseException) -> None:
         """If an exception happens, then the circuit is reopen directly."""
         opened = OpenedState(context.name)
         context.set_state(opened)
 
-    def handle_end_request(self, context: Context):
+    def handle_end_request(self, context: Context) -> None:
         """Otherwise, the circuit is closed, back to normal."""
         context.recover_failure()
         context.set_state(ClosedState())

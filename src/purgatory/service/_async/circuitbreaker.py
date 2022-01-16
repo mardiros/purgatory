@@ -69,22 +69,22 @@ class PublicEvent:
 
     async def cb_created(
         self, event: CircuitBreakerCreated, uow: AsyncAbstractUnitOfWork
-    ):
+    ) -> None:
         self.hook(event.name, "circuit_breaker_created", event)
 
     async def cb_state_changed(
         self, event: CircuitBreakerCreated, uow: AsyncAbstractUnitOfWork
-    ):
+    ) -> None:
         self.hook(event.name, "state_changed", event)
 
     async def cb_failed(
         self, event: CircuitBreakerCreated, uow: AsyncAbstractUnitOfWork
-    ):
+    ) -> None:
         self.hook(event.name, "failed", event)
 
     async def cb_recovered(
         self, event: CircuitBreakerCreated, uow: AsyncAbstractUnitOfWork
-    ):
+    ) -> None:
         self.hook(event.name, "recovered", event)
 
 
@@ -107,13 +107,13 @@ class AsyncCircuitBreakerFactory:
         self.messagebus.add_listener(CircuitBreakerRecovered, reset_failure)
         self.listeners: Dict[Hook, PublicEvent] = {}
 
-    async def initialize(self):
+    async def initialize(self) -> None:
         await self.uow.initialize()
 
-    def add_listener(self, listener: Hook):
+    def add_listener(self, listener: Hook) -> None:
         self.listeners[listener] = PublicEvent(self.messagebus, listener)
 
-    def remove_listener(self, listener: Hook):
+    def remove_listener(self, listener: Hook) -> None:
         try:
             self.listeners[listener].remove_listeners(self.messagebus)
             del self.listeners[listener]

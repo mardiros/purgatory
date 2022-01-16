@@ -20,7 +20,7 @@ class SyncAbstractUnitOfWork(abc.ABC):
         while self.contexts.messages:
             yield self.contexts.messages.pop(0)
 
-    def initialize(self):
+    def initialize(self) -> None:
         """Override to initialize  repositories."""
 
     def __enter__(self) -> SyncAbstractUnitOfWork:
@@ -37,34 +37,34 @@ class SyncAbstractUnitOfWork(abc.ABC):
             self.rollback()
 
     @abc.abstractmethod
-    def commit(self):
+    def commit(self) -> None:
         """Commit the transation."""
 
     @abc.abstractmethod
-    def rollback(self):
+    def rollback(self) -> None:
         """Rollback the transation."""
 
 
 class SyncInMemoryUnitOfWork(SyncAbstractUnitOfWork):
-    def __init__(self):
+    def __init__(self) -> None:
         self.contexts = SyncInMemoryRepository()
 
-    def commit(self):
+    def commit(self) -> None:
         """Do nothing."""
 
-    def rollback(self):
+    def rollback(self) -> None:
         """Do nothing."""
 
 
 class SyncRedisUnitOfWork(SyncAbstractUnitOfWork):
-    def __init__(self, url: str):
+    def __init__(self, url: str) -> None:
         self.contexts = SyncRedisRepository(url)
 
-    def initialize(self):
+    def initialize(self) -> None:
         self.contexts.initialize()
 
-    def commit(self):
+    def commit(self) -> None:
         """Do nothing."""
 
-    def rollback(self):
+    def rollback(self) -> None:
         """Do nothing."""
