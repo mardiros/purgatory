@@ -55,24 +55,24 @@ class AsyncCircuitBreaker:
 
 class PublicEvent:
     def __init__(self, messagebus: AsyncMessageRegistry, hook: Hook) -> None:
-        messagebus.add_listener(CircuitBreakerCreated, self.cb_created)  # type: ignore
-        messagebus.add_listener(ContextChanged, self.cb_state_changed)  # type: ignore
-        messagebus.add_listener(CircuitBreakerFailed, self.cb_failed)  # type: ignore
+        messagebus.add_listener(CircuitBreakerCreated, self.cb_created)
+        messagebus.add_listener(ContextChanged, self.cb_state_changed)
+        messagebus.add_listener(CircuitBreakerFailed, self.cb_failed)
         messagebus.add_listener(
-            CircuitBreakerRecovered, self.cb_recovered  # type: ignore
+            CircuitBreakerRecovered, self.cb_recovered
         )
         self.hook = hook
 
     def remove_listeners(self, messagebus: AsyncMessageRegistry) -> None:
         messagebus.remove_listener(
-            CircuitBreakerCreated, self.cb_created  # type: ignore
+            CircuitBreakerCreated, self.cb_created
         )
         messagebus.remove_listener(
-            ContextChanged, self.cb_state_changed  # type: ignore
+            ContextChanged, self.cb_state_changed
         )
-        messagebus.remove_listener(CircuitBreakerFailed, self.cb_failed)  # type: ignore
+        messagebus.remove_listener(CircuitBreakerFailed, self.cb_failed)
         messagebus.remove_listener(
-            CircuitBreakerRecovered, self.cb_recovered  # type: ignore
+            CircuitBreakerRecovered, self.cb_recovered
         )
 
     async def cb_created(
@@ -110,16 +110,16 @@ class AsyncCircuitBreakerFactory:
         self.uow = uow or AsyncInMemoryUnitOfWork()
         self.messagebus = AsyncMessageRegistry()
         self.messagebus.add_listener(
-            CreateCircuitBreaker, register_circuit_breaker  # type: ignore
+            CreateCircuitBreaker, register_circuit_breaker
         )
         self.messagebus.add_listener(
-            ContextChanged, save_circuit_breaker_state  # type: ignore
+            ContextChanged, save_circuit_breaker_state
         )
         self.messagebus.add_listener(
-            CircuitBreakerFailed, inc_circuit_breaker_failure  # type: ignore
+            CircuitBreakerFailed, inc_circuit_breaker_failure
         )
         self.messagebus.add_listener(
-            CircuitBreakerRecovered, reset_failure  # type: ignore
+            CircuitBreakerRecovered, reset_failure
         )
         self.listeners: Dict[Hook, PublicEvent] = {}
 
