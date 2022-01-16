@@ -21,6 +21,7 @@ version = "0.7.1"
 [[tool.mypy.overrides]]
 module = "purgatory.*"
 disallow_untyped_defs = true
+disallow_any_generics = true
 
 [tool.poetry.dependencies]
 python = "^3.7"
