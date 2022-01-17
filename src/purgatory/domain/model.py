@@ -46,19 +46,22 @@ class Context:
         state: StateName = "closed",
         failure_count: int = 0,
         opened_at: Optional[float] = None,
-        exclude: ExcludeType = None,
+        exclude: Optional[ExcludeType] = None,
     ) -> None:
         self.name = name
         self.ttl = ttl
         self.threshold = threshold
 
-        args = {OpenedState.name: [name]}.get(state, [])
-        self._state = {
-            ClosedState.name: ClosedState,
-            OpenedState.name: OpenedState,
-            HalfOpenedState.name: HalfOpenedState,
-        }[state](*args)
-        self._state.opened_at = opened_at
+        self._state: State
+        if state == OpenedState.name:
+            self._state = OpenedState(name)
+        elif state == HalfOpenedState.name:
+            self._state = HalfOpenedState()
+        else:
+            self._state = ClosedState()
+
+        if opened_at is not None:
+            self._state.opened_at = opened_at
         self._state.failure_count = failure_count
         self.messages = []
         self.exclude_list = exclude or []
@@ -110,7 +113,10 @@ class Context:
             if isinstance(exctype_func, tuple):
                 exctype, func = cast(ExcludeTypeFunc, exctype_func)
             else:
-                exctype, func = cast(ExcludeExcType, exctype_func), lambda exc: True
+                exctype, func = cast(ExcludeExcType, exctype_func), cast(
+                    Callable[[BaseException], bool],
+                    lambda exc: True,  # type: ignore
+                )
 
             if isinstance(exc, exctype):
                 failed = not func(exc)
