@@ -18,6 +18,10 @@ packages = [
 readme = "README.rst"
 version = "0.7.1"
 
+[tool.pyright]
+include = ["src"]
+typeCheckingMode = "strict"
+
 [[tool.mypy.overrides]]
 module = "purgatory.*"
 disallow_untyped_defs = true

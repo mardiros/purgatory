@@ -1,9 +1,10 @@
 import abc
 import json
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from purgatory.domain.messages.base import Message
 from purgatory.domain.model import Context
+from purgatory.service._redis import AsyncRedis
 from purgatory.typing import CircuitName
 
 
@@ -78,7 +79,7 @@ class AsyncRedisRepository(AsyncAbstractRepository):
             import aioredis
         except ImportError:
             raise ConfigurationError("redis extra dependencies not installed.")
-        self.redis = aioredis.from_url(url)
+        self.redis: AsyncRedis = aioredis.from_url(url)  # type: ignore
         self.messages = []
         self.prefix = "cbr::"
 
@@ -87,11 +88,13 @@ class AsyncRedisRepository(AsyncAbstractRepository):
 
     async def get(self, name: CircuitName) -> Optional[Context]:
         """Add a circuit breaker into the repository."""
-        data = await self.redis.get(f"{self.prefix}{name}")
+        data: Any = await self.redis.get(f"{self.prefix}{name}")
         if not data:
             return None
         breaker = json.loads(data or "{}")
-        failure_count = await self.redis.get(f"{self.prefix}{name}::failure_count")
+        failure_count: int = (
+            await self.redis.get(f"{self.prefix}{name}::failure_count") or 0
+        )
         if failure_count:
             breaker["failure_count"] = int(failure_count)
         cbreaker = Context(**breaker)
@@ -117,8 +120,8 @@ class AsyncRedisRepository(AsyncAbstractRepository):
         opened_at: Optional[float],
     ) -> None:
         """Store the new state in the repository."""
-        data = await self.redis.get(f"{self.prefix}{name}")
-        breaker = json.loads(data or "{}")
+        data: str = await self.redis.get(f"{self.prefix}{name}") or "{}"
+        breaker = json.loads(data)
         breaker["state"] = state
         breaker["opened_at"] = opened_at
         await self.redis.set(f"{self.prefix}{name}", json.dumps(breaker))

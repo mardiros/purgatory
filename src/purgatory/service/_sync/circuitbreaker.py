@@ -93,7 +93,7 @@ class SyncCircuitBreakerFactory:
         self,
         default_threshold: Threshold = 5,
         default_ttl: TTL = 30,
-        exclude: ExcludeType = None,
+        exclude: Optional[ExcludeType] = None,
         uow: Optional[SyncAbstractUnitOfWork] = None,
     ):
         self.default_threshold = default_threshold
@@ -125,7 +125,7 @@ class SyncCircuitBreakerFactory:
         circuit: CircuitName,
         threshold: Optional[Threshold] = None,
         ttl: Optional[TTL] = None,
-        exclude: ExcludeType = None,
+        exclude: Optional[ExcludeType] = None,
     ) -> SyncCircuitBreaker:
         with self.uow as uow:
             brk = uow.contexts.get(circuit)
@@ -145,7 +145,7 @@ class SyncCircuitBreakerFactory:
         circuit: str,
         threshold: Optional[Threshold] = None,
         ttl: Optional[TTL] = None,
-        exclude: ExcludeType = None,
+        exclude: Optional[ExcludeType] = None,
     ) -> Any:
         def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
             @wraps(func)
