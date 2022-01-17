@@ -118,8 +118,8 @@ class SyncRedisRepository(SyncAbstractRepository):
         opened_at: Optional[float],
     ) -> None:
         """Store the new state in the repository."""
-        data: Any = self.redis.get(f"{self.prefix}{name}")
-        breaker = json.loads(data or "{}")
+        data: str = self.redis.get(f"{self.prefix}{name}") or "{}"
+        breaker = json.loads(data)
         breaker["state"] = state
         breaker["opened_at"] = opened_at
         self.redis.set(f"{self.prefix}{name}", json.dumps(breaker))

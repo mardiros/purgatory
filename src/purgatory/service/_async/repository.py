@@ -92,7 +92,9 @@ class AsyncRedisRepository(AsyncAbstractRepository):
         if not data:
             return None
         breaker = json.loads(data or "{}")
-        failure_count: int = await self.redis.get(f"{self.prefix}{name}::failure_count")
+        failure_count: int = (
+            await self.redis.get(f"{self.prefix}{name}::failure_count") or 0
+        )
         if failure_count:
             breaker["failure_count"] = int(failure_count)
         cbreaker = Context(**breaker)
@@ -118,8 +120,8 @@ class AsyncRedisRepository(AsyncAbstractRepository):
         opened_at: Optional[float],
     ) -> None:
         """Store the new state in the repository."""
-        data: Any = await self.redis.get(f"{self.prefix}{name}")
-        breaker = json.loads(data or "{}")
+        data: str = await self.redis.get(f"{self.prefix}{name}") or "{}"
+        breaker = json.loads(data)
         breaker["state"] = state
         breaker["opened_at"] = opened_at
         await self.redis.set(f"{self.prefix}{name}", json.dumps(breaker))
