@@ -16,7 +16,7 @@ packages = [
   {include = "purgatory", from = "src"},
 ]
 readme = "README.rst"
-version = "0.7.1"
+version = "0.7.2"
 
 [tool.pyright]
 include = ["src"]
