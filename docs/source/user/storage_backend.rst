@@ -18,7 +18,7 @@ Using asynchronous API
 
    ::
 
-      pip install "purgatory-circuitbreaker[aioredis]"
+      pip install "purgatory[aioredis]"
 
 
 ::
@@ -48,7 +48,7 @@ Using synchronous API
 
    ::
 
-      pip install "purgatory-circuitbreaker[redis]"
+      pip install "purgatory[redis]"
 
 
 ::
