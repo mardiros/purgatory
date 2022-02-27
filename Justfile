@@ -39,7 +39,7 @@ cov test_suite=default_test_suite:
     poetry run pytest --cov-report=html --cov=purgatory {{test_suite}}
     xdg-open htmlcov/index.html
 
-release major_minor_patch: gensync test rtd && changelog
+release major_minor_patch: gensync test && rtd changelog
     poetry version {{major_minor_patch}}
     poetry install
 
