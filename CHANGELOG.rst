@@ -1,3 +1,7 @@
+1.0.0  - Released on 2022-02-16
+-------------------------------
+* Rename package to purgatory
+
 0.7.2  - Released on 2022-01-18
 -------------------------------
 * Improve typing
