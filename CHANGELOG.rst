@@ -1,4 +1,4 @@
-1.0.0  - Released on 2022-02-16
+1.0.0  - Released on 2022-02-27
 -------------------------------
 * Rename package to purgatory
 
