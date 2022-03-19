@@ -8,7 +8,7 @@ cleandoc:
     cd docs && poetry run make clean
 
 rtd:
-    poetry export --dev -f requirements.txt -o docs/requirements.txt
+    poetry export --dev -f requirements.txt -o docs/requirements.txt --without-hashes
 
 gensync:
     poetry run python scripts/gen_unasync.py
