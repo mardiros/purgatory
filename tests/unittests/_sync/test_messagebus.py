@@ -25,7 +25,6 @@ def listen_event(cmd: DummyEvent, uow):
     DummyModel.counter += cmd.increment
 
 
-@pytest.mark.asyncio
 def test_messagebus(messagebus):
     """
     Test that the message bus is firing command and event.
@@ -68,7 +67,6 @@ def test_messagebus(messagebus):
     ), "The command should raise an event that is not handled anymore "
 
 
-@pytest.mark.asyncio
 def test_messagebus_handle_only_message(messagebus):
     class Msg:
         def __repr__(self):
@@ -79,7 +77,6 @@ def test_messagebus_handle_only_message(messagebus):
     assert str(ctx.value) == "<msg> was not an Event or Command"
 
 
-@pytest.mark.asyncio
 def test_messagebus_cannot_register_handler_twice(messagebus):
 
     messagebus.add_listener(DummyCommand, listen_command)
@@ -93,7 +90,6 @@ def test_messagebus_cannot_register_handler_twice(messagebus):
     messagebus.add_listener(DummyCommand, listen_command)
 
 
-@pytest.mark.asyncio
 def test_messagebus_cannot_register_handler_on_non_message(messagebus):
     with pytest.raises(ConfigurationError) as ctx:
         messagebus.add_listener(object, listen_command)
@@ -104,7 +100,6 @@ def test_messagebus_cannot_register_handler_on_non_message(messagebus):
     )
 
 
-@pytest.mark.asyncio
 def test_messagebus_cannot_unregister_non_unregistered_handler(messagebus):
     with pytest.raises(ConfigurationError) as ctx:
         messagebus.remove_listener(DummyCommand, listen_command)

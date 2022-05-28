@@ -1,5 +1,3 @@
-import pytest
-
 from purgatory.domain.messages.base import Message
 from purgatory.service._sync.repository import SyncInMemoryRepository
 from purgatory.service._sync.unit_of_work import (
@@ -22,7 +20,6 @@ class TrackableUnitOfWork(SyncAbstractUnitOfWork):
         self.rollbacked = True
 
 
-@pytest.mark.asyncio
 def test_commit_is_explicit():
     uow = TrackableUnitOfWork()
     with uow:
@@ -31,7 +28,6 @@ def test_commit_is_explicit():
     assert uow.rollbacked is False
 
 
-@pytest.mark.asyncio
 def test_rollack_is_implicit():
     uow = TrackableUnitOfWork()
     try:
@@ -43,7 +39,6 @@ def test_rollack_is_implicit():
     assert uow.rollbacked is True
 
 
-@pytest.mark.asyncio
 def test_uow_is_collecting_events():
     uow = SyncInMemoryUnitOfWork()
     a = Message()

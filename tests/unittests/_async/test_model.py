@@ -22,7 +22,6 @@ def test_circuitbreaker_open_raise():
     ]
 
 
-@pytest.mark.asyncio
 async def test_circuitbreaker_open_closed_after_ttl_passed():
     context = Context("my", threshold=5, ttl=0.1)
     state = OpenedState("my")
@@ -45,7 +44,6 @@ async def test_circuitbreaker_open_closed_after_ttl_passed():
     assert context._state == ClosedState()
 
 
-@pytest.mark.asyncio
 async def test_circuitbreaker_open_reopened_after_ttl_passed():
     context = Context("my", threshold=5, ttl=0.1)
     state = OpenedState("my")
@@ -114,7 +112,6 @@ def test_circuitbreaker_reset_after_failure():
     assert context.messages == [CircuitBreakerRecovered(name="my")]
 
 
-@pytest.mark.asyncio
 def test_circuitbreaker_can_exclude_exception():
     class MyException(RuntimeError):
         pass
@@ -149,7 +146,6 @@ def test_circuitbreaker_can_exclude_exception():
     assert context.failure_count == 0
 
 
-@pytest.mark.asyncio
 def test_circuitbreaker_can_exclude_function():
     class HTTPError(Exception):
         def __init__(self, status_code) -> None:

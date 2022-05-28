@@ -13,7 +13,6 @@ from purgatory.service._sync.circuitbreaker import SyncCircuitBreakerFactory
 from tests.unittests.time import SyncSleep
 
 
-@pytest.mark.asyncio
 def test_circuitbreaker_factory_decorator(
     circuitbreaker: SyncCircuitBreakerFactory,
 ):
@@ -54,7 +53,6 @@ def test_circuitbreaker_factory_decorator(
     assert brk == Context(name="client3", threshold=5, ttl=60)
 
 
-@pytest.mark.asyncio
 def test_redis_circuitbreaker_factory_decorator(
     fake_redis, circuitbreaker_redis: SyncCircuitBreakerFactory
 ):
@@ -103,7 +101,6 @@ def test_redis_circuitbreaker_factory_decorator(
         (("cname", 7, 42, [ValueError]), ("cname", 7, 42, [ValueError])),
     ],
 )
-@pytest.mark.asyncio
 def test_circuitbreaker_factory_get_breaker(
     uow,
     cbr,
@@ -129,7 +126,6 @@ def test_circuitbreaker_repr(state):
     )
 
 
-@pytest.mark.asyncio
 def test_circuitbreaker_raise_state_changed_event(circuitbreaker):
 
     evts = []
@@ -161,7 +157,6 @@ def test_circuitbreaker_raise_state_changed_event(circuitbreaker):
     ]
 
 
-@pytest.mark.asyncio
 def test_circuit_breaker_factory_global_exclude():
     circuitbreaker = SyncCircuitBreakerFactory(exclude=[ValueError])
 
@@ -197,7 +192,6 @@ def test_circuit_breaker_factory_global_exclude():
     assert (circuitbreaker.get_breaker("my")).context.state == "opened"
 
 
-@pytest.mark.asyncio
 def test_circuitbreaker_factory_add_listener():
 
     evts = []
@@ -284,7 +278,6 @@ def test_circuitbreaker_factory_add_listener():
     ]
 
 
-@pytest.mark.asyncio
 def test_circuitbreaker_factory_remove_listener():
 
     evts = []

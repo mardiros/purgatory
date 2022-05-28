@@ -11,7 +11,6 @@ from purgatory.service._sync.repository import (
 
 @pytest.mark.parametrize("repository", ["inmemory", "redis"])
 @pytest.mark.parametrize("state", ["half-opened", "opened", "closed"])
-@pytest.mark.asyncio
 def test_redis_respository_state_recovery(
     state,
     repository,
@@ -29,7 +28,6 @@ def test_redis_respository_state_recovery(
 
 
 @pytest.mark.parametrize("repository", ["redis"])
-@pytest.mark.asyncio
 def test_redis_respository_workflow(
     repository,
     # the in memory repository works update its state in the model,

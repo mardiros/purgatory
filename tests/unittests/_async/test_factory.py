@@ -1,12 +1,9 @@
 from typing import cast
 
-import pytest
-
 from purgatory.domain.model import Context
 from purgatory.service._async.repository import AsyncInMemoryRepository
 
 
-@pytest.mark.asyncio
 async def test_circuitbreaker_factory_context(circuitbreaker):
 
     count = 0
@@ -28,7 +25,6 @@ async def test_circuitbreaker_factory_context(circuitbreaker):
     }
 
 
-@pytest.mark.asyncio
 async def test_circuitbreaker_factory_context_exclude_exceptions_with_context(
     circuitbreaker,
 ):
@@ -49,7 +45,6 @@ async def test_circuitbreaker_factory_context_exclude_exceptions_with_context(
     assert cbr.context.state == "opened"
 
 
-@pytest.mark.asyncio
 async def test_circuitbreaker_factory_context_exclude_exceptions_with_decorator(
     circuitbreaker,
 ):
