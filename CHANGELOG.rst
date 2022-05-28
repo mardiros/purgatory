@@ -1,3 +1,7 @@
+1.0.1  - Released on 2022-05-28
+-------------------------------
+* Update dependencies
+
 1.0.0  - Released on 2022-02-27
 -------------------------------
 * Rename package to purgatory
