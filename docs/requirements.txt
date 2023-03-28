@@ -36,7 +36,7 @@ pytest-asyncio==0.18.3; python_version >= "3.7"
 pytest-cov==3.0.0; python_version >= "3.6"
 pytest==7.1.2; python_version >= "3.7"
 pytz==2022.1; python_version >= "3.6"
-redis==4.3.1; python_version >= "3.6"
+redis==4.3.6; python_version >= "3.6"
 requests==2.27.1; python_version >= "3.6" and python_full_version < "3.0.0" or python_full_version >= "3.6.0" and python_version >= "3.6"
 snowballstemmer==2.2.0; python_version >= "3.6" and python_full_version < "3.0.0" or python_full_version >= "3.4.0" and python_version >= "3.6"
 sphinx-rtd-theme==1.0.0; (python_version >= "2.7" and python_full_version < "3.0.0") or (python_full_version >= "3.4.0")
