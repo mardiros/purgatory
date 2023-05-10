@@ -76,10 +76,10 @@ class SyncInMemoryRepository(SyncAbstractRepository):
 class SyncRedisRepository(SyncAbstractRepository):
     def __init__(self, url: str) -> None:
         try:
-            import redis
+            from redis import asyncio as aioredis
         except ImportError:
             raise ConfigurationError("redis extra dependencies not installed.")
-        self.redis: SyncRedis = redis.from_url(url)  # type: ignore
+        self.redis: SyncRedis = aioredis.from_url(url)  # type: ignore
         self.messages = []
         self.prefix = "cbr::"
 

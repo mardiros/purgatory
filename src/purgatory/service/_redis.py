@@ -1,7 +1,7 @@
 from typing import Any
 
 try:
-    from aioredis import Redis as AioRedis
+    from redis.asyncio import Redis as AioRedis
 
     AsyncRedis = AioRedis
 except ImportError:

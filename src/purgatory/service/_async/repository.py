@@ -76,7 +76,7 @@ class AsyncInMemoryRepository(AsyncAbstractRepository):
 class AsyncRedisRepository(AsyncAbstractRepository):
     def __init__(self, url: str) -> None:
         try:
-            import aioredis
+            from redis import asyncio as aioredis
         except ImportError:
             raise ConfigurationError("redis extra dependencies not installed.")
         self.redis: AsyncRedis = aioredis.from_url(url)  # type: ignore

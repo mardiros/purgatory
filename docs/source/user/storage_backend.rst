@@ -14,11 +14,11 @@ Using asynchronous API
 
 .. important::
 
-   Extra dependency ``aioredis`` is required. can be installed using
+   Extra dependency ``redis`` is required. can be installed using
 
    ::
 
-      pip install "purgatory[aioredis]"
+      pip install "purgatory[redis]"
 
 
 ::
