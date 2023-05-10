@@ -1,3 +1,10 @@
+1.0.2  - Released on 2023-05-10
+-------------------------------
+* Remove aioredis (replaced by redis.asyncio)
+* Update depenencies
+* pip install purgatory[aioredis] is kept for compat
+  but its install the redis package.
+
 1.0.1  - Released on 2022-05-28
 -------------------------------
 * Update dependencies
