@@ -9,7 +9,6 @@ unasync.unasync_files(
             "src/purgatory/service/_async",
             "src/purgatory/service/_sync",
             additional_replacements={
-                "aioredis": "redis",
                 "_async": "_sync",
             },
         ),
@@ -23,7 +22,6 @@ unasync.unasync_files(
             "tests/unittests/_async",
             "tests/unittests/_sync",
             additional_replacements={
-                "aioredis": "redis",
                 "_async": "_sync",
                 "AsyncSleep": "SyncSleep",
             },
