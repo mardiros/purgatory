@@ -1,9 +1,9 @@
 Purgatory
 =========
 
-.. image:: https://readthedocs.org/projects/purgatory/badge/?version=latest
-   :target: https://purgatory.readthedocs.io/en/latest/?badge=latest
-   :alt: Documentation Status
+.. image:: https://github.com/mardiros/purgatory/actions/workflows/gh-pages.yml/badge.svg
+   :target: https://mardiros.github.io/purgatory/
+   :alt: Documentation
 
 .. image:: https://github.com/mardiros/purgatory/actions/workflows/main.yml/badge.svg
    :target: https://github.com/mardiros/purgatory/actions/workflows/main.yml
