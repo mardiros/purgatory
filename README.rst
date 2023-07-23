@@ -103,7 +103,7 @@ You can read the `full documentation of this library here`_.
 
 .. important::
 
-   | The documentation has been moved to github github pages.
+   | The documentation has been moved to github pages.
    | The documentation under readthedocs is obsolete. 
 
 Alternatives
