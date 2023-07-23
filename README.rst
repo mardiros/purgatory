@@ -33,7 +33,7 @@ the library aiobreaker was used but I encountered limitation so, I decide
 to build my own implementation that feet well with `blacksmith`_.
 
 
-.. _`blacksmith`: https://python-blacksmith.readthedocs.io/en/latest/
+.. _`blacksmith`: https://mardiros.github.io/blacksmith/
 
 
 Features
