@@ -98,8 +98,13 @@ Read More
 
 You can read the `full documentation of this library here`_.
 
-.. _`full documentation of this library here`: https://purgatory.readthedocs.io/en/latest/user/introduction.html
+.. _`full documentation of this library here`: https://mardiros.github.io/purgatory/user/introduction.html
 
+
+.. important::
+
+   | The documentation has been moved to github github pages.
+   | The documentation under readthedocs is obsolete. 
 
 Alternatives
 ------------
