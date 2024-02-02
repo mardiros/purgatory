@@ -8,7 +8,7 @@ cleandoc:
     cd docs && poetry run make clean
 
 gh-pages:
-    poetry export --dev -f requirements.txt -o docs/requirements.txt --without-hashes
+    poetry export --with dev -f requirements.txt -o docs/requirements.txt --without-hashes
 
 gensync:
     poetry run python scripts/gen_unasync.py
