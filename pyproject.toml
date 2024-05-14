@@ -60,7 +60,6 @@ profile = "black"
 [tool.coverage.report]
 exclude_lines = [
   "except ImportError:",
-  "except pkg_resources.DistributionNotFound:",
 ]
 
 [build-system]
