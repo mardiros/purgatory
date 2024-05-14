@@ -3,6 +3,7 @@ Circuit breaker state model.
 
 The state model is implemented using the State pattern from the Gang Of Four.
 """
+
 import abc
 import time
 from dataclasses import dataclass

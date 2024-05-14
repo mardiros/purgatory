@@ -36,7 +36,7 @@ aioredis = ["redis"]  # kept for compat
 redis = ["redis"]
 
 [tool.poetry.group.dev.dependencies]
-black = "^22.3.0"
+black = "^24.4.2"
 coverage = {version = "^6.2", extras = ["toml"]}
 flake8 = "^5.0.4"
 furo = "^2022"
