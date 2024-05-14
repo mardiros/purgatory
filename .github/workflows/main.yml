@@ -32,7 +32,7 @@ jobs:
           poetry-version: ${{ matrix.poetry-version }}
 
       - name: Install purgatory
-        run: poetry install
+        run: poetry install --with dev
 
       - name: Run tests
         run: |
