@@ -1,3 +1,8 @@
+2.0.0  - Released on 2024-05-15
+-------------------------------
+* Remove support of Python 3.7
+* Add support Python 3.12
+
 1.0.3  - Released on 2023-07-29
 -------------------------------
 * Update dependencies
