@@ -2,6 +2,7 @@
 Propagate commands and events to every registered handles.
 
 """
+
 import logging
 from typing import Any, Callable, Coroutine, TypeVar, Union
 

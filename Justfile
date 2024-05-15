@@ -1,5 +1,8 @@
 default_test_suite := 'tests/unittests'
 
+install:
+    poetry install --with dev
+
 doc:
     cd docs && poetry run make html
     xdg-open docs/build/html/index.html
@@ -51,9 +54,9 @@ changelog:
     $EDITOR CHANGELOG.rst
 
 publish:
-    git commit -am "Release $(poetry run python scripts/show_release.py)"
+    git commit -am "Release $(poetry version -s --no-ansi)"
     poetry build
     poetry publish
     git push
-    git tag "$(poetry run python scripts/show_release.py)"
-    git push origin "$(poetry run python scripts/show_release.py)"
+    git tag "$(poetry version -s --no-ansi)"
+    git push origin "$(poetry version -s --no-ansi)"

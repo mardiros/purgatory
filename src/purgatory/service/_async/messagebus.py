@@ -2,6 +2,7 @@
 Propagate commands and events to every registered handles.
 
 """
+
 import logging
 from collections import defaultdict
 from typing import Any, Dict, List, Type, TypeVar, cast
@@ -26,9 +27,9 @@ class AsyncMessageRegistry:
 
     def __init__(self) -> None:
         self.commands_registry: Dict[Type[Command], AsyncCommandHandler[Command]] = {}
-        self.events_registry: Dict[
-            Type[Event], List[AsyncEventHandler[Event]]
-        ] = defaultdict(list)
+        self.events_registry: Dict[Type[Event], List[AsyncEventHandler[Event]]] = (
+            defaultdict(list)
+        )
 
     def add_listener(
         self, msg_type: Type[Message], callback: AsyncMessageHandler[Any, Any]
