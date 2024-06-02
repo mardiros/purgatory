@@ -28,7 +28,7 @@ disallow_untyped_defs = true
 disallow_any_generics = true
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = "^3.8.1"
 redis = {version = "^5.0.4", optional = true}
 
 [tool.poetry.extras]
@@ -40,7 +40,7 @@ optional = true
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.2"
 coverage = {version = "^6.2", extras = ["toml"]}
-flake8 = "^5.0.4"
+flake8 = "^7.0.0"
 furo = "^2024.5.6"
 isort = "^5.10.1"
 mypy = "^1.4.1"
