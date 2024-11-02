@@ -77,7 +77,9 @@ class SyncRedisRepository(SyncAbstractRepository):
         try:
             from redis import asyncio as aioredis
         except ImportError as exc:
-            raise ConfigurationError("redis extra dependencies not installed.") from exc
+            raise ConfigurationError(  # coverage: ignore
+                "redis extra dependencies not installed."
+            ) from exc
         self.redis: SyncRedis = aioredis.from_url(url)  # type: ignore
         self.messages = []
         self.prefix = "cbr::"
