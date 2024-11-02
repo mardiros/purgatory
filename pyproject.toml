@@ -85,6 +85,12 @@ disallow_any_generics = true
 [tool.coverage.report]
 exclude_lines = ["except ImportError", "# coverage: ignore"]
 
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+norecursedirs = "tests/unittests/scanned_resources"
+testpaths = ["tests"]
+filterwarnings = ["error"]
+
 [build-system]
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"
