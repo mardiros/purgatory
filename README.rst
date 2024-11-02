@@ -86,8 +86,8 @@ Example with a decorator
 
 
 
-Example with a context manager for an synchronous API
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Example with a context manager for a synchronous API
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ::
 
