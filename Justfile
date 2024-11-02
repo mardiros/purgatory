@@ -10,9 +10,6 @@ doc:
 cleandoc:
     cd docs && uv run make clean
 
-gh-pages:
-    uv export --group doc -o docs/requirements.txt --no-hashes
-
 gensync: && fmt
     uv run python scripts/gen_unasync.py
 
@@ -43,7 +40,7 @@ cov test_suite=default_test_suite:
     uv run pytest --cov-report=html --cov=purgatory {{test_suite}}
     xdg-open htmlcov/index.html
 
-release major_minor_patch: gensync test && gh-pages changelog
+release major_minor_patch: gensync test && changelog
     #! /bin/bash
     # Try to bump the version first
     if ! uvx pdm bump {{major_minor_patch}}; then
