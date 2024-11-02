@@ -62,6 +62,6 @@ changelog:
     $EDITOR CHANGELOG.rst
 
 publish:
-    git commit -am "Release $(poetry version -s --no-ansi)"
-    git tag "v$(poetry version -s --no-ansi)"
-    git push origin "v$(poetry version -s --no-ansi)"
+    git commit -am "Release $(uv run scripts/get_version.py)"
+    git tag "v$(uv run scripts/get_version.py)"
+    git push origin "v$(uv run scripts/get_version.py)"
