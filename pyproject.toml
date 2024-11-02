@@ -1,13 +1,21 @@
 [project]
 authors = [{ name = "Guillaume Gauvrit", email = "guillaume@gauvr.it" }]
 classifiers = [
-    "Development Status :: Stable",
-    "Framework :: AsyncIO",
-    "Intended Audience :: Developers",
-    "License :: OSI Approved :: BSD License",
-    "Topic :: Software Development :: Libraries :: Python Modules",
+    "License :: OSI Approved :: MIT License",
     "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: System :: Monitoring",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Topic :: System :: Networking",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Framework :: AsyncIO",
+    "Operating System :: OS Independent",
+    "Environment :: Console",
+    "Typing :: Typed",
+    "Development Status :: 5 - Production/Stable"
 ]
+
 description = "A circuit breaker implementation for asyncio"
 license = { text = "MIT" }
 name = "purgatory"
@@ -52,7 +60,7 @@ line-length = 88
 
 [tool.ruff.lint]
 select = [
-    # "B",   # bug bear security warning
+    "B",   # bug bear security warning
     "I",   # isort import order
     "F",   # pyflakes
     # "UP",  # alter when better syntax is available
