@@ -1,12 +1,12 @@
 Purgatory
 =========
 
-.. image:: https://github.com/mardiros/purgatory/actions/workflows/gh-pages.yml/badge.svg
+.. image:: https://github.com/mardiros/purgatory/actions/workflows/publish-doc.yml/badge.svg
    :target: https://mardiros.github.io/purgatory/
    :alt: Documentation
 
 .. image:: https://github.com/mardiros/purgatory/actions/workflows/tests.yml/badge.svg
-:target: https://github.com/mardiros/purgatory/actions/workflows/tests.yml
+   :target: https://github.com/mardiros/purgatory/actions/workflows/tests.yml
    :alt: Continuous Integration Status
 
 .. image:: https://codecov.io/gh/mardiros/purgatory/branch/main/graph/badge.svg?token=LFVOQC2C9E
