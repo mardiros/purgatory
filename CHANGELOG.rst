@@ -1,3 +1,7 @@
+3.0.1  - Released on 2024-11-02
+-------------------------------
+* Fix readme file 
+
 3.0.0  - Released on 2024-11-02
 -------------------------------
 * Remove support of Python 3.8
