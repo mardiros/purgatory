@@ -1,3 +1,11 @@
+3.0.0  - Released on 2024-11-02
+-------------------------------
+* Remove support of Python 3.8
+* Change license to MIT
+* Update packaging to use uv/pdm instead of poetry
+* Update of the CI
+* Update linting, use ruff instead of flake8
+
 2.0.0  - Released on 2024-05-15
 -------------------------------
 * Remove support of Python 3.7
