@@ -13,7 +13,6 @@ class ConfigurationError(RuntimeError):
 
 
 class SyncAbstractRepository(abc.ABC):
-
     messages: List[Message]
 
     def initialize(self) -> None:

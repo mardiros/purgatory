@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import abc
+from collections.abc import Generator
 from types import TracebackType
-from typing import Generator, Optional, Type
+from typing import Optional, Type
 
 from purgatory.domain.messages import Message
 from purgatory.service._sync.repository import (

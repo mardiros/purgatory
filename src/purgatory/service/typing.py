@@ -4,7 +4,8 @@ Propagate commands and events to every registered handles.
 """
 
 import logging
-from typing import Any, Callable, Coroutine, TypeVar, Union
+from collections.abc import Coroutine
+from typing import Any, Callable, TypeVar, Union
 
 from purgatory.domain.messages.base import Command, Event
 

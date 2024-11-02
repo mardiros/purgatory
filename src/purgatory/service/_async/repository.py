@@ -13,7 +13,6 @@ class ConfigurationError(RuntimeError):
 
 
 class AsyncAbstractRepository(abc.ABC):
-
     messages: List[Message]
 
     async def initialize(self) -> None:

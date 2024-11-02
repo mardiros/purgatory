@@ -1,22 +1,64 @@
-[tool.poetry]
-authors = ["Guillaume Gauvrit <guillaume@gauvr.it>"]
+[project]
+authors = [{ name = "Guillaume Gauvrit", email = "guillaume@gauvr.it" }]
 classifiers = [
-  "Development Status :: 4 - Beta",
-  "Framework :: AsyncIO",
-  "Intended Audience :: Developers",
-  "License :: OSI Approved :: BSD License",
-  "Topic :: Software Development :: Libraries :: Python Modules",
-  "Topic :: Internet :: WWW/HTTP",
+    "Development Status :: Stable",
+    "Framework :: AsyncIO",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: BSD License",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Internet :: WWW/HTTP",
 ]
 description = "A circuit breaker implementation for asyncio"
-homepage = "https://github.com/mardiros/purgatory"
-license = "MIT"
+license = { text = "MIT" }
 name = "purgatory"
-packages = [
-  {include = "purgatory", from = "src"},
-]
 readme = "README.rst"
+requires-python = ">=3.9"
 version = "2.0.0"
+
+[project.urls]
+Homepage = "https://github.com/mardiros/purgatory"
+Documentation = "https://mardiros.github.io/purgatory"
+Repository = "https://github.com/mardiros/purgatory.git"
+Issues = "https://github.com/mardiros/purgatory/issues"
+Changelog = "https://mardiros.github.io/purgatory/user/changelog.html"
+
+[tool.pdm.build]
+includes = ["src", "CHANGELOG.rst"]
+excludes = ["tests"]
+
+[project.optional-dependencies]
+redis = ["redis >=5.2.0,<6"]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.4.1,<2",
+    "pytest>=8.3.3,<9",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=6.0.0,<7",
+    "redis>=5.2.0,<6",
+    "types-redis>=4.6.0,<6",
+    "unasync>=0.6.0,<7",
+]
+doc = [
+    "esbonio>=0.16.1",
+    "sphinx>=7.0.0",
+    "sphinx-autodoc-typehints>=1.12.0,<2",
+    "furo>=2024.8.6",
+]
+
+[tool.ruff]
+target-version = "py39"
+line-length = 88
+
+[tool.ruff.lint]
+select = [
+    # "B",   # bug bear security warning
+    "I",   # isort import order
+    "F",   # pyflakes
+    # "UP",  # alter when better syntax is available
+    # "RUF", #  the ruff devleoper's own rules
+]
+ignore = ["UP007"] # py39 !
 
 [tool.pyright]
 include = ["src"]
@@ -27,42 +69,9 @@ module = "purgatory.*"
 disallow_untyped_defs = true
 disallow_any_generics = true
 
-[tool.poetry.dependencies]
-python = "^3.8.1"
-redis = {version = "^5.0.4", optional = true}
-
-[tool.poetry.extras]
-redis = ["redis"]
-
-[tool.poetry.group.dev]
-optional = true
-
-[tool.poetry.group.dev.dependencies]
-black = "^24.4.2"
-coverage = {version = "^6.2", extras = ["toml"]}
-flake8 = "^7.0.0"
-furo = "^2024.5.6"
-isort = "^5.10.1"
-mypy = "^1.4.1"
-pytest = "^7.1.3"
-pytest-asyncio = "^0.21.1"
-pytest-cov = "^4.1.0"
-redis = "^5.0.4"
-sphinx = "^7.0.1"
-sphinx-autodoc-typehints = "^1.12.0"
-tomlkit = "^0.12.5"
-types-redis = "^4.6.0"
-typing-extensions = "^4.7.1"
-unasync = "^0.6.0"
-
-[tool.isort]
-profile = "black"
-
 [tool.coverage.report]
-exclude_lines = [
-  "except ImportError:",
-]
+exclude_lines = ["except ImportError:"]
 
 [build-system]
-build-backend = "poetry.core.masonry.api"
-requires = ["poetry-core>=1.0.0"]
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"

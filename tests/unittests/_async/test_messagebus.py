@@ -78,7 +78,6 @@ async def test_messagebus_handle_only_message(messagebus):
 
 
 async def test_messagebus_cannot_register_handler_twice(messagebus):
-
     messagebus.add_listener(DummyCommand, listen_command)
     with pytest.raises(ConfigurationError) as ctx:
         messagebus.add_listener(DummyCommand, listen_command)

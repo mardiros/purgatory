@@ -110,13 +110,15 @@ class Context:
     def handle_exception(self, exc: BaseException) -> None:
         failed = True
         for exctype_func in self.exclude_list:
-
             if isinstance(exctype_func, tuple):
                 exctype, func = cast(ExcludeTypeFunc, exctype_func)
             else:
-                exctype, func = cast(ExcludeExcType, exctype_func), cast(
-                    Callable[[BaseException], bool],
-                    lambda exc: True,  # type: ignore
+                exctype, func = (
+                    cast(ExcludeExcType, exctype_func),
+                    cast(
+                        Callable[[BaseException], bool],
+                        lambda exc: True,  # type: ignore
+                    ),
                 )
 
             if isinstance(exc, exctype):

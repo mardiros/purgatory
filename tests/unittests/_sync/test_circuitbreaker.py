@@ -16,7 +16,6 @@ from tests.unittests.time import SyncSleep
 def test_circuitbreaker_factory_decorator(
     circuitbreaker: SyncCircuitBreakerFactory,
 ):
-
     count = 0
 
     @circuitbreaker(circuit="client")
@@ -56,7 +55,6 @@ def test_circuitbreaker_factory_decorator(
 def test_redis_circuitbreaker_factory_decorator(
     fake_redis, circuitbreaker_redis: SyncCircuitBreakerFactory
 ):
-
     count = 0
     circuitbreaker_redis.initialize()
 
@@ -127,7 +125,6 @@ def test_circuitbreaker_repr(state):
 
 
 def test_circuitbreaker_raise_state_changed_event(circuitbreaker):
-
     evts = []
 
     def evt_handler(cmd: ContextChanged, uow):
@@ -193,7 +190,6 @@ def test_circuit_breaker_factory_global_exclude():
 
 
 def test_circuitbreaker_factory_add_listener():
-
     evts = []
 
     def hook(name, evt_name, evt):
@@ -279,7 +275,6 @@ def test_circuitbreaker_factory_add_listener():
 
 
 def test_circuitbreaker_factory_remove_listener():
-
     evts = []
 
     class Hook:

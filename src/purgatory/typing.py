@@ -1,6 +1,4 @@
-from typing import Callable
-
-from typing_extensions import Literal
+from typing import Callable, Literal
 
 from purgatory.domain.messages.base import Event
 
