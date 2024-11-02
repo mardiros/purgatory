@@ -10,7 +10,7 @@ classifiers = [
 ]
 description = "A circuit breaker implementation for asyncio"
 homepage = "https://github.com/mardiros/purgatory"
-license = "BSD-derived"
+license = "MIT"
 name = "purgatory"
 packages = [
   {include = "purgatory", from = "src"},
