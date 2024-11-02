@@ -117,8 +117,8 @@ class AsyncCircuitBreakerFactory:
         try:
             self.listeners[listener].remove_listeners(self.messagebus)
             del self.listeners[listener]
-        except KeyError:
-            raise RuntimeError(f"{listener} is not listening {self}")
+        except KeyError as exc:
+            raise RuntimeError(f"{listener} is not listening {self}") from exc
 
     async def get_breaker(
         self,

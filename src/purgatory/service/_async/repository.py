@@ -15,7 +15,7 @@ class ConfigurationError(RuntimeError):
 class AsyncAbstractRepository(abc.ABC):
     messages: List[Message]
 
-    async def initialize(self) -> None:
+    async def initialize(self) -> None:  # noqa B027
         """Override to initialize the repository asynchronously"""
 
     @abc.abstractmethod
@@ -76,8 +76,8 @@ class AsyncRedisRepository(AsyncAbstractRepository):
     def __init__(self, url: str) -> None:
         try:
             from redis import asyncio as aioredis
-        except ImportError:
-            raise ConfigurationError("redis extra dependencies not installed.")
+        except ImportError as exc:
+            raise ConfigurationError("redis extra dependencies not installed.") from exc
         self.redis: AsyncRedis = aioredis.from_url(url)  # type: ignore
         self.messages = []
         self.prefix = "cbr::"

@@ -22,7 +22,7 @@ class SyncAbstractUnitOfWork(abc.ABC):
         while self.contexts.messages:
             yield self.contexts.messages.pop(0)
 
-    def initialize(self) -> None:
+    def initialize(self) -> None:  # noqa B027
         """Override to initialize  repositories."""
 
     def __enter__(self) -> SyncAbstractUnitOfWork:

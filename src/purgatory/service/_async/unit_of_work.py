@@ -22,7 +22,7 @@ class AsyncAbstractUnitOfWork(abc.ABC):
         while self.contexts.messages:
             yield self.contexts.messages.pop(0)
 
-    async def initialize(self) -> None:
+    async def initialize(self) -> None:  # noqa B027
         """Override to initialize  repositories."""
 
     async def __aenter__(self) -> AsyncAbstractUnitOfWork:
