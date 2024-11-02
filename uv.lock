@@ -606,6 +606,11 @@ version = "3.0.1"
 source = { editable = "." }
 
 [package.optional-dependencies]
+docs = [
+    { name = "furo" },
+    { name = "sphinx" },
+    { name = "sphinx-autodoc-typehints" },
+]
 redis = [
     { name = "redis" },
 ]
@@ -628,7 +633,12 @@ doc = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "redis", marker = "extra == 'redis'", specifier = ">=5.2.0,<6" }]
+requires-dist = [
+    { name = "furo", marker = "extra == 'docs'", specifier = ">=2024.8.6" },
+    { name = "redis", marker = "extra == 'redis'", specifier = ">=5.2.0,<6" },
+    { name = "sphinx", marker = "extra == 'docs'", specifier = ">=7.0.0" },
+    { name = "sphinx-autodoc-typehints", marker = "extra == 'docs'", specifier = ">=1.12.0,<2" },
+]
 
 [package.metadata.dependency-groups]
 dev = [

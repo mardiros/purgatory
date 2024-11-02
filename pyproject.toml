@@ -36,6 +36,11 @@ excludes = ["tests"]
 
 [project.optional-dependencies]
 redis = ["redis >=5.2.0,<6"]
+docs = [
+    "sphinx>=7.0.0",
+    "sphinx-autodoc-typehints>=1.12.0,<2",
+    "furo>=2024.8.6",
+]
 
 [dependency-groups]
 dev = [
