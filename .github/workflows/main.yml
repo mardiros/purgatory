@@ -1,7 +1,4 @@
-# This workflow will install Python dependencies, run tests and lint with a variety of Python versions
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
-
-name: CI
+name: tests
 
 on:
   push:
@@ -9,42 +6,41 @@ on:
   pull_request:
     branches: [ main ]
 
-jobs:
-  build:
+  workflow_dispatch:
 
+  workflow_call:
+    secrets:
+      CODECOV_TOKEN:
+        required: true  # Ensures CODECOV_TOKEN is required for this workflow
+
+
+jobs:
+  CI:
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
-        poetry-version: ["1.8.3"]
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - uses: chartboost/ruff-action@v1
 
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Run image
-        uses: abatilo/actions-poetry@v2
-        with:
-          poetry-version: ${{ matrix.poetry-version }}
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
 
-      - name: Install purgatory
-        run: poetry install --with dev
-
-      - name: Run tests
-        run: |
-          poetry run pytest tests/unittests  --junitxml=junit/test-results-${{ matrix.python-version }}.xml --cov=purgatory --cov-report=xml --cov-report=html
-
-      - name: Check lint
-        run: |
-          poetry run flake8 .
+      - name: Install the project
+        run: uv sync --group dev
 
       - name: Check types
         run: |
-          poetry run mypy src/purgatory/
+          uv run mypy src/purgatory/
+
+      - name: Run tests
+        run: |
+          uv run pytest tests  --junitxml=junit/test-results-${{ matrix.python-version }}.xml --cov=purgatory --cov-report=xml --cov-report=html
 
       - name: Upload pytest test results
         uses: actions/upload-artifact@v4
@@ -53,9 +49,8 @@ jobs:
           path: junit/test-results-${{ matrix.python-version }}.xml
 
       - name: Codecov
-        uses: codecov/codecov-action@v3
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        if: matrix.python-version == '3.12' && github.event_name != 'workflow_dispatch'
+        uses: codecov/codecov-action@v4
         with:
-          # Comma-separated list of files to upload
+          token: ${{ secrets.CODECOV_TOKEN }}
           files: coverage.xml
