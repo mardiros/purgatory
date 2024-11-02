@@ -5,7 +5,7 @@ Propagate commands and events to every registered handles.
 
 import logging
 from collections import defaultdict
-from typing import Any, Dict, List, Type, TypeVar, cast
+from typing import Any, TypeVar, cast
 
 from purgatory.domain.messages.base import Command, Event, Message
 
@@ -26,13 +26,13 @@ class AsyncMessageRegistry:
     """Store all the handlers for commands an events."""
 
     def __init__(self) -> None:
-        self.commands_registry: Dict[Type[Command], AsyncCommandHandler[Command]] = {}
-        self.events_registry: Dict[Type[Event], List[AsyncEventHandler[Event]]] = (
+        self.commands_registry: dict[type[Command], AsyncCommandHandler[Command]] = {}
+        self.events_registry: dict[type[Event], list[AsyncEventHandler[Event]]] = (
             defaultdict(list)
         )
 
     def add_listener(
-        self, msg_type: Type[Message], callback: AsyncMessageHandler[Any, Any]
+        self, msg_type: type[Message], callback: AsyncMessageHandler[Any, Any]
     ) -> None:
         if issubclass(msg_type, Command):
             if msg_type in self.commands_registry:
@@ -88,14 +88,14 @@ class AsyncMessageRegistry:
                 raise RuntimeError(f"{message} was not an Event or Command")
             msg_type = type(message)
             if msg_type in self.commands_registry:
-                cmdret = await self.commands_registry[cast(Type[Command], msg_type)](
+                cmdret = await self.commands_registry[cast(type[Command], msg_type)](
                     cast(Command, message), uow
                 )
                 if idx == 0:
                     ret = cmdret
                 queue.extend(uow.collect_new_events())
             elif msg_type in self.events_registry:
-                for callback in self.events_registry[cast(Type[Event], msg_type)]:
+                for callback in self.events_registry[cast(type[Event], msg_type)]:
                     await callback(cast(Event, message), uow)
                     queue.extend(uow.collect_new_events())
             idx += 1

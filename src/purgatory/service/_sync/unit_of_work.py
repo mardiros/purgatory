@@ -5,7 +5,7 @@ from __future__ import annotations
 import abc
 from collections.abc import Generator
 from types import TracebackType
-from typing import Optional, Type
+from typing import Optional
 
 from purgatory.domain.messages import Message
 from purgatory.service._sync.repository import (
@@ -30,7 +30,7 @@ class SyncAbstractUnitOfWork(abc.ABC):
 
     def __exit__(
         self,
-        exc_type: Optional[Type[BaseException]],
+        exc_type: Optional[type[BaseException]],
         exc: Optional[BaseException],
         tb: Optional[TracebackType],
     ) -> None:

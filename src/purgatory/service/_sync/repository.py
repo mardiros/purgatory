@@ -1,6 +1,6 @@
 import abc
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from purgatory.domain.messages.base import Message
 from purgatory.domain.model import Context
@@ -13,7 +13,7 @@ class ConfigurationError(RuntimeError):
 
 
 class SyncAbstractRepository(abc.ABC):
-    messages: List[Message]
+    messages: list[Message]
 
     def initialize(self) -> None:  # noqa B027
         """Override to initialize the repository asynchronously"""
@@ -46,8 +46,8 @@ class SyncAbstractRepository(abc.ABC):
 
 class SyncInMemoryRepository(SyncAbstractRepository):
     def __init__(self) -> None:
-        self.breakers: Dict[CircuitName, Context] = {}
-        self.messages: List[Message] = []
+        self.breakers: dict[CircuitName, Context] = {}
+        self.messages: list[Message] = []
 
     def get(self, name: CircuitName) -> Optional[Context]:
         """Add a circuit breaker into the repository."""
