@@ -5,7 +5,6 @@ from purgatory.service._sync.repository import SyncInMemoryRepository
 
 
 def test_circuitbreaker_factory_context(circuitbreaker):
-
     count = 0
 
     with circuitbreaker.get_breaker("my"):

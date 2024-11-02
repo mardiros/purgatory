@@ -8,7 +8,7 @@ import abc
 import time
 from dataclasses import dataclass
 from types import TracebackType
-from typing import Callable, List, Optional, Tuple, Type, Union, cast
+from typing import Callable, Optional, Union, cast
 
 from purgatory.domain.messages.base import Event
 from purgatory.domain.messages.events import (
@@ -18,9 +18,9 @@ from purgatory.domain.messages.events import (
 )
 from purgatory.typing import TTL, CircuitName, StateName, Threshold
 
-ExcludeExcType = Type[BaseException]
-ExcludeTypeFunc = Tuple[ExcludeExcType, Callable[..., bool]]
-ExcludeType = List[
+ExcludeExcType = type[BaseException]
+ExcludeTypeFunc = tuple[ExcludeExcType, Callable[..., bool]]
+ExcludeType = list[
     Union[
         ExcludeExcType,
         ExcludeTypeFunc,
@@ -36,7 +36,7 @@ class Context:
     name: CircuitName
     threshold: Threshold
     ttl: TTL
-    messages: List[Event]
+    messages: list[Event]
     exclude_list: ExcludeType
 
     def __init__(
@@ -110,13 +110,15 @@ class Context:
     def handle_exception(self, exc: BaseException) -> None:
         failed = True
         for exctype_func in self.exclude_list:
-
             if isinstance(exctype_func, tuple):
                 exctype, func = cast(ExcludeTypeFunc, exctype_func)
             else:
-                exctype, func = cast(ExcludeExcType, exctype_func), cast(
-                    Callable[[BaseException], bool],
-                    lambda exc: True,  # type: ignore
+                exctype, func = (
+                    cast(ExcludeExcType, exctype_func),
+                    cast(
+                        Callable[[BaseException], bool],
+                        lambda exc: True,  # type: ignore
+                    ),
                 )
 
             if isinstance(exc, exctype):
@@ -136,7 +138,7 @@ class Context:
 
     def __exit__(
         self,
-        exc_type: Optional[Type[BaseException]],
+        exc_type: Optional[type[BaseException]],
         exc: Optional[BaseException],
         tb: Optional[TracebackType],
     ) -> None:

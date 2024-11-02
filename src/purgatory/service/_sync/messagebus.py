@@ -5,7 +5,7 @@ Propagate commands and events to every registered handles.
 
 import logging
 from collections import defaultdict
-from typing import Any, Dict, List, Type, TypeVar, cast
+from typing import Any, TypeVar, cast
 
 from purgatory.domain.messages.base import Command, Event, Message
 
@@ -26,13 +26,13 @@ class SyncMessageRegistry:
     """Store all the handlers for commands an events."""
 
     def __init__(self) -> None:
-        self.commands_registry: Dict[Type[Command], SyncCommandHandler[Command]] = {}
-        self.events_registry: Dict[Type[Event], List[SyncEventHandler[Event]]] = (
+        self.commands_registry: dict[type[Command], SyncCommandHandler[Command]] = {}
+        self.events_registry: dict[type[Event], list[SyncEventHandler[Event]]] = (
             defaultdict(list)
         )
 
     def add_listener(
-        self, msg_type: Type[Message], callback: SyncMessageHandler[Any, Any]
+        self, msg_type: type[Message], callback: SyncMessageHandler[Any, Any]
     ) -> None:
         if issubclass(msg_type, Command):
             if msg_type in self.commands_registry:
@@ -64,8 +64,10 @@ class SyncMessageRegistry:
                 self.events_registry[msg_type].remove(
                     cast(SyncEventHandler[Event], callback)
                 )
-            except ValueError:
-                raise ConfigurationError(f"{msg_type} event has not been registered")
+            except ValueError as exc:
+                raise ConfigurationError(
+                    f"{msg_type} event has not been registered"
+                ) from exc
         else:
             raise ConfigurationError(
                 f"Invalid usage of the listen decorator: "
@@ -86,14 +88,14 @@ class SyncMessageRegistry:
                 raise RuntimeError(f"{message} was not an Event or Command")
             msg_type = type(message)
             if msg_type in self.commands_registry:
-                cmdret = self.commands_registry[cast(Type[Command], msg_type)](
+                cmdret = self.commands_registry[cast(type[Command], msg_type)](
                     cast(Command, message), uow
                 )
                 if idx == 0:
                     ret = cmdret
                 queue.extend(uow.collect_new_events())
             elif msg_type in self.events_registry:
-                for callback in self.events_registry[cast(Type[Event], msg_type)]:
+                for callback in self.events_registry[cast(type[Event], msg_type)]:
                     callback(cast(Event, message), uow)
                     queue.extend(uow.collect_new_events())
             idx += 1

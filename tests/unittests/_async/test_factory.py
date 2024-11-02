@@ -5,7 +5,6 @@ from purgatory.service._async.repository import AsyncInMemoryRepository
 
 
 async def test_circuitbreaker_factory_context(circuitbreaker):
-
     count = 0
 
     async with await circuitbreaker.get_breaker("my"):

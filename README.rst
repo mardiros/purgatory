@@ -5,8 +5,8 @@ Purgatory
    :target: https://mardiros.github.io/purgatory/
    :alt: Documentation
 
-.. image:: https://github.com/mardiros/purgatory/actions/workflows/main.yml/badge.svg
-   :target: https://github.com/mardiros/purgatory/actions/workflows/main.yml
+.. image:: https://github.com/mardiros/purgatory/actions/workflows/tests.yml/badge.svg
+:target: https://github.com/mardiros/purgatory/actions/workflows/tests.yml
    :alt: Continuous Integration Status
 
 .. image:: https://codecov.io/gh/mardiros/purgatory/branch/main/graph/badge.svg?token=LFVOQC2C9E

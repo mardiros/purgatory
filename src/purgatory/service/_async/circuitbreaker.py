@@ -1,6 +1,6 @@
 from functools import wraps
 from types import TracebackType
-from typing import Any, Callable, Dict, Optional, Type
+from typing import Any, Callable, Optional
 
 from purgatory.domain.messages.commands import CreateCircuitBreaker
 from purgatory.domain.messages.events import (
@@ -41,7 +41,7 @@ class AsyncCircuitBreaker:
 
     async def __aexit__(
         self,
-        exc_type: Optional[Type[BaseException]],
+        exc_type: Optional[type[BaseException]],
         exc: Optional[BaseException],
         tb: Optional[TracebackType],
     ) -> None:
@@ -105,7 +105,7 @@ class AsyncCircuitBreakerFactory:
         self.messagebus.add_listener(ContextChanged, save_circuit_breaker_state)
         self.messagebus.add_listener(CircuitBreakerFailed, inc_circuit_breaker_failure)
         self.messagebus.add_listener(CircuitBreakerRecovered, reset_failure)
-        self.listeners: Dict[Hook, PublicEvent] = {}
+        self.listeners: dict[Hook, PublicEvent] = {}
 
     async def initialize(self) -> None:
         await self.uow.initialize()
@@ -117,8 +117,8 @@ class AsyncCircuitBreakerFactory:
         try:
             self.listeners[listener].remove_listeners(self.messagebus)
             del self.listeners[listener]
-        except KeyError:
-            raise RuntimeError(f"{listener} is not listening {self}")
+        except KeyError as exc:
+            raise RuntimeError(f"{listener} is not listening {self}") from exc
 
     async def get_breaker(
         self,

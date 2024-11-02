@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import abc
+from collections.abc import Generator
 from types import TracebackType
-from typing import Generator, Optional, Type
+from typing import Optional
 
 from purgatory.domain.messages import Message
 from purgatory.service._sync.repository import (
@@ -21,7 +22,7 @@ class SyncAbstractUnitOfWork(abc.ABC):
         while self.contexts.messages:
             yield self.contexts.messages.pop(0)
 
-    def initialize(self) -> None:
+    def initialize(self) -> None:  # noqa B027
         """Override to initialize  repositories."""
 
     def __enter__(self) -> SyncAbstractUnitOfWork:
@@ -29,7 +30,7 @@ class SyncAbstractUnitOfWork(abc.ABC):
 
     def __exit__(
         self,
-        exc_type: Optional[Type[BaseException]],
+        exc_type: Optional[type[BaseException]],
         exc: Optional[BaseException],
         tb: Optional[TracebackType],
     ) -> None:

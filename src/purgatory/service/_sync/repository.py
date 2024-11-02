@@ -1,6 +1,6 @@
 import abc
 import json
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from purgatory.domain.messages.base import Message
 from purgatory.domain.model import Context
@@ -13,10 +13,9 @@ class ConfigurationError(RuntimeError):
 
 
 class SyncAbstractRepository(abc.ABC):
+    messages: list[Message]
 
-    messages: List[Message]
-
-    def initialize(self) -> None:
+    def initialize(self) -> None:  # noqa B027
         """Override to initialize the repository asynchronously"""
 
     @abc.abstractmethod
@@ -47,8 +46,8 @@ class SyncAbstractRepository(abc.ABC):
 
 class SyncInMemoryRepository(SyncAbstractRepository):
     def __init__(self) -> None:
-        self.breakers: Dict[CircuitName, Context] = {}
-        self.messages: List[Message] = []
+        self.breakers: dict[CircuitName, Context] = {}
+        self.messages: list[Message] = []
 
     def get(self, name: CircuitName) -> Optional[Context]:
         """Add a circuit breaker into the repository."""
@@ -77,8 +76,10 @@ class SyncRedisRepository(SyncAbstractRepository):
     def __init__(self, url: str) -> None:
         try:
             from redis import asyncio as aioredis
-        except ImportError:
-            raise ConfigurationError("redis extra dependencies not installed.")
+        except ImportError as exc:
+            raise ConfigurationError(  # coverage: ignore
+                "redis extra dependencies not installed."
+            ) from exc
         self.redis: SyncRedis = aioredis.from_url(url)  # type: ignore
         self.messages = []
         self.prefix = "cbr::"
