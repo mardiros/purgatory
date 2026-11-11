@@ -5,7 +5,6 @@ from __future__ import annotations
 import abc
 from collections.abc import Generator
 from types import TracebackType
-from typing import Optional
 
 from purgatory.domain.messages import Message
 from purgatory.service._sync.repository import (
@@ -30,9 +29,9 @@ class SyncAbstractUnitOfWork(abc.ABC):
 
     def __exit__(
         self,
-        exc_type: Optional[type[BaseException]],
-        exc: Optional[BaseException],
-        tb: Optional[TracebackType],
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
     ) -> None:
         """Rollback in case of exception."""
         if exc:

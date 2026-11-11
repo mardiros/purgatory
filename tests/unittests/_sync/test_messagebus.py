@@ -36,17 +36,17 @@ def test_messagebus(messagebus):
     DummyModel.counter = 0
     uow = FakeUnitOfWorkWithDummyEvents()
     listen_command(DummyCommand(id=""), uow)
-    assert (
-        DummyModel.counter == 0
-    ), "Events raised cannot be played before the attach_listener has been called"
+    assert DummyModel.counter == 0, (
+        "Events raised cannot be played before the attach_listener has been called"
+    )
 
     listen_event(DummyEvent(id="", increment=1), uow)
     assert DummyModel.counter == 1
 
     messagebus.handle(DummyCommand(id=""), uow)
-    assert (
-        DummyModel.counter == 1
-    ), "The command cannot raise event before attach_listener"
+    assert DummyModel.counter == 1, (
+        "The command cannot raise event before attach_listener"
+    )
 
     messagebus.add_listener(DummyCommand, listen_command)
     messagebus.add_listener(DummyEvent, listen_event)
@@ -62,9 +62,9 @@ def test_messagebus(messagebus):
 
     uow = FakeUnitOfWorkWithDummyEvents()
     messagebus.handle(DummyCommand(id=""), uow)
-    assert (
-        DummyModel.counter == 11
-    ), "The command should raise an event that is not handled anymore "
+    assert DummyModel.counter == 11, (
+        "The command should raise an event that is not handled anymore "
+    )
 
 
 def test_messagebus_handle_only_message(messagebus):

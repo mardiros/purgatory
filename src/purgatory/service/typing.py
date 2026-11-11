@@ -4,8 +4,8 @@ Propagate commands and events to every registered handles.
 """
 
 import logging
-from collections.abc import Coroutine
-from typing import Any, Callable, TypeVar, Union
+from collections.abc import Callable, Coroutine
+from typing import Any, TypeVar
 
 from purgatory.domain.messages.base import Command, Event
 
@@ -23,9 +23,9 @@ AsyncCommandHandler = Callable[
 AsyncEventHandler = Callable[
     [TEvent, AsyncAbstractUnitOfWork], Coroutine[Any, Any, None]
 ]
-AsyncMessageHandler = Union[AsyncCommandHandler[TCommand], AsyncEventHandler[TEvent]]
+AsyncMessageHandler = AsyncCommandHandler[TCommand] | AsyncEventHandler[TEvent]
 
 
 SyncCommandHandler = Callable[[TCommand, SyncAbstractUnitOfWork], Any]
 SyncEventHandler = Callable[[TEvent, SyncAbstractUnitOfWork], None]
-SyncMessageHandler = Union[SyncCommandHandler[TCommand], SyncEventHandler[TEvent]]
+SyncMessageHandler = SyncCommandHandler[TCommand] | SyncEventHandler[TEvent]

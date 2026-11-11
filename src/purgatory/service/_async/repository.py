@@ -1,6 +1,6 @@
 import abc
 import json
-from typing import Any, Optional
+from typing import Any
 
 from purgatory.domain.messages.base import Message
 from purgatory.domain.model import Context
@@ -19,7 +19,7 @@ class AsyncAbstractRepository(abc.ABC):
         """Override to initialize the repository asynchronously"""
 
     @abc.abstractmethod
-    async def get(self, name: CircuitName) -> Optional[Context]:
+    async def get(self, name: CircuitName) -> Context | None:
         """Load breakers from the repository."""
 
     @abc.abstractmethod
@@ -31,7 +31,7 @@ class AsyncAbstractRepository(abc.ABC):
         self,
         name: str,
         state: str,
-        opened_at: Optional[float],
+        opened_at: float | None,
     ) -> None:
         """Sate the new staate of the circuit breaker into the repository."""
 
@@ -49,7 +49,7 @@ class AsyncInMemoryRepository(AsyncAbstractRepository):
         self.breakers: dict[CircuitName, Context] = {}
         self.messages: list[Message] = []
 
-    async def get(self, name: CircuitName) -> Optional[Context]:
+    async def get(self, name: CircuitName) -> Context | None:
         """Add a circuit breaker into the repository."""
         return self.breakers.get(name)
 
@@ -61,7 +61,7 @@ class AsyncInMemoryRepository(AsyncAbstractRepository):
         self,
         name: str,
         state: str,
-        opened_at: Optional[float],
+        opened_at: float | None,
     ) -> None:
         """Because the get method return the object directly, nothing to do here."""
 
@@ -87,7 +87,7 @@ class AsyncRedisRepository(AsyncAbstractRepository):
     async def initialize(self) -> None:
         await self.redis.initialize()  # type: ignore
 
-    async def get(self, name: CircuitName) -> Optional[Context]:
+    async def get(self, name: CircuitName) -> Context | None:
         """Add a circuit breaker into the repository."""
         data: Any = await self.redis.get(f"{self.prefix}{name}")
         if not data:
@@ -118,7 +118,7 @@ class AsyncRedisRepository(AsyncAbstractRepository):
         self,
         name: str,
         state: str,
-        opened_at: Optional[float],
+        opened_at: float | None,
     ) -> None:
         """Store the new state in the repository."""
         data: str = await self.redis.get(f"{self.prefix}{name}") or "{}"

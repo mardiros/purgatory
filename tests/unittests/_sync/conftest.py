@@ -1,5 +1,5 @@
 import json
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 import pytest
 
@@ -38,7 +38,7 @@ class FakeRedis:
         self.initialized = True
         self.storage = {}
 
-    def get(self, key) -> Optional[Any]:
+    def get(self, key) -> Any | None:
         if not self.initialized:
             raise RuntimeError("Unititialized")
         return self.storage.get(key)
