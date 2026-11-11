@@ -6,9 +6,10 @@ The state model is implemented using the State pattern from the Gang Of Four.
 
 import abc
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from types import TracebackType
-from typing import Callable, Optional, Union, cast
+from typing import cast
 
 from purgatory.domain.messages.base import Event
 from purgatory.domain.messages.events import (
@@ -20,12 +21,7 @@ from purgatory.typing import TTL, CircuitName, StateName, Threshold
 
 ExcludeExcType = type[BaseException]
 ExcludeTypeFunc = tuple[ExcludeExcType, Callable[..., bool]]
-ExcludeType = list[
-    Union[
-        ExcludeExcType,
-        ExcludeTypeFunc,
-    ]
-]
+ExcludeType = list[ExcludeExcType | ExcludeTypeFunc]
 
 CLOSED: StateName = "closed"
 OPENED: StateName = "opened"
@@ -46,8 +42,8 @@ class Context:
         ttl: TTL,
         state: StateName = "closed",
         failure_count: int = 0,
-        opened_at: Optional[float] = None,
-        exclude: Optional[ExcludeType] = None,
+        opened_at: float | None = None,
+        exclude: ExcludeType | None = None,
     ) -> None:
         self.name = name
         self.ttl = ttl
@@ -72,11 +68,11 @@ class Context:
         return cast(StateName, self._state.name)
 
     @property
-    def opened_at(self) -> Optional[float]:
+    def opened_at(self) -> float | None:
         return self._state.opened_at
 
     @property
-    def failure_count(self) -> Optional[int]:
+    def failure_count(self) -> int | None:
         return self._state.failure_count
 
     def set_state(self, state: "State") -> None:
@@ -138,9 +134,9 @@ class Context:
 
     def __exit__(
         self,
-        exc_type: Optional[type[BaseException]],
-        exc: Optional[BaseException],
-        tb: Optional[TracebackType],
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
     ) -> None:
         if exc:
             return self.handle_exception(exc)
@@ -165,8 +161,8 @@ class Context:
 
 
 class State(abc.ABC):
-    failure_count: Optional[int] = None
-    opened_at: Optional[float] = None
+    failure_count: int | None = None
+    opened_at: float | None = None
     name: str = ""
 
     @abc.abstractmethod

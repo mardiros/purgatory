@@ -1,6 +1,7 @@
+from collections.abc import Callable
 from functools import wraps
 from types import TracebackType
-from typing import Any, Callable, Optional
+from typing import Any
 
 from purgatory.domain.messages.commands import CreateCircuitBreaker
 from purgatory.domain.messages.events import (
@@ -41,9 +42,9 @@ class AsyncCircuitBreaker:
 
     async def __aexit__(
         self,
-        exc_type: Optional[type[BaseException]],
-        exc: Optional[BaseException],
-        tb: Optional[TracebackType],
+        exc_type: type[BaseException] | None,
+        exc: BaseException | None,
+        tb: TracebackType | None,
     ) -> None:
         self.context.__exit__(exc_type, exc, tb)
         while self.context.messages:
@@ -93,8 +94,8 @@ class AsyncCircuitBreakerFactory:
         self,
         default_threshold: Threshold = 5,
         default_ttl: TTL = 30,
-        exclude: Optional[ExcludeType] = None,
-        uow: Optional[AsyncAbstractUnitOfWork] = None,
+        exclude: ExcludeType | None = None,
+        uow: AsyncAbstractUnitOfWork | None = None,
     ):
         self.default_threshold = default_threshold
         self.default_ttl = default_ttl
@@ -123,9 +124,9 @@ class AsyncCircuitBreakerFactory:
     async def get_breaker(
         self,
         circuit: CircuitName,
-        threshold: Optional[Threshold] = None,
-        ttl: Optional[TTL] = None,
-        exclude: Optional[ExcludeType] = None,
+        threshold: Threshold | None = None,
+        ttl: TTL | None = None,
+        exclude: ExcludeType | None = None,
     ) -> AsyncCircuitBreaker:
         async with self.uow as uow:
             brk = await uow.contexts.get(circuit)
@@ -143,9 +144,9 @@ class AsyncCircuitBreakerFactory:
     def __call__(
         self,
         circuit: str,
-        threshold: Optional[Threshold] = None,
-        ttl: Optional[TTL] = None,
-        exclude: Optional[ExcludeType] = None,
+        threshold: Threshold | None = None,
+        ttl: TTL | None = None,
+        exclude: ExcludeType | None = None,
     ) -> Any:
         def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
             @wraps(func)
